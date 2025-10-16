@@ -1,61 +1,60 @@
-// !$*UTF8*$!
-{
+#!/usr/bin/env python3
+"""
+Script to create a proper Xcode project file with all Swift sources
+"""
+import os
+import uuid
+
+# Generate unique IDs
+def gen_id():
+    return str(uuid.uuid4()).replace('-', '')[:24].upper()
+
+# Find all Swift files
+swift_files = []
+for root, dirs, files in os.walk('TrusendaCRM'):
+    for file in files:
+        if file.endswith('.swift'):
+            rel_path = os.path.relpath(os.path.join(root, file), '.')
+            swift_files.append(rel_path)
+
+# Generate file references
+file_refs = {}
+build_files = {}
+
+for f in swift_files:
+    file_id = gen_id()
+    build_id = gen_id()
+    file_refs[f] = file_id
+    build_files[f] = build_id
+
+# Generate pbxproj content
+pbxproj = f'''// !$*UTF8*$!
+{{
 	archiveVersion = 1;
-	classes = {
-	};
+	classes = {{
+	}};
 	objectVersion = 56;
-	objects = {
+	objects = {{
 
 /* Begin PBXBuildFile section */
-		E636C88E9565412C81411FA8 /* TrusendaCRMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23214E484FC04F87B64A7E8E /* TrusendaCRMApp.swift */; };
-		933CCBAE34AC47BEB2B2BDE3 /* Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12D5FF3497E4E66806D8AD5 /* Endpoints.swift */; };
-		30D2B282FFE64E12A8547531 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 545A88D2706D45AFB1A8B8A1 /* APIClient.swift */; };
-		0041BD7959AC4E8CAF849B6C /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C4428653849258CA10BEF /* AuthManager.swift */; };
-		9F3B4D6830F844C4B44AE95D /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E8176ECD844E5CB11BA304 /* NetworkError.swift */; };
-		821A8B8DBF6F498FBBC298AD /* TenantInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9882D92B6E4DC798176439 /* TenantInfo.swift */; };
-		F95C1ED04FEB48F69443B2C8 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593D4D2980D64EAAB98533C6 /* User.swift */; };
-		41A482E34EA94924BDD10357 /* Lead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DE71BCAA49540EF8C5E8677 /* Lead.swift */; };
-		14707DEA494D45B2A77359C0 /* APIResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CE0603E8F94E70AB48D4EF /* APIResponses.swift */; };
-		E396CC4866914C87B246B6C0 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEBAA6292A540F1ACC80FF8 /* KeychainManager.swift */; };
-		56933E14E18F486EBCBB5429 /* DateFormatter+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96808FAE512453C8C003457 /* DateFormatter+Extensions.swift */; };
-		D794F8F682FA453B852DE36F /* PhoneFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A55BEFF8A2564BDFBD1FF5A5 /* PhoneFormatter.swift */; };
-		F7E7EECCD80C4826B90AD8C5 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA7A8F3FAC44627906BF7B6 /* Validation.swift */; };
-		7F42E5BB234348CFB85F97E3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 024494637DA34EF79E11A0B1 /* SettingsView.swift */; };
-		0164035851C243FF9F26B2B5 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B5211FA3354552B8797826 /* SettingsViewModel.swift */; };
-		2F452C84C4494D70980BC88B /* FollowUpListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E6A849E00B741F3B5E72B77 /* FollowUpListView.swift */; };
-		BABD88A1A9B74B99B778E2BD /* LeadListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9500B9F7F6A149F3A6798FEF /* LeadListView.swift */; };
-		8B9AC340840C4E6198F25CDD /* AddLeadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0761FBC66FA4776BA06D865 /* AddLeadView.swift */; };
-		B27FC36C7D5F45BDA54E451F /* LeadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB0E62500D9429A9706865D /* LeadViewModel.swift */; };
-		9CF2FDFED84849578AB4F1CA /* LeadDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D48AF575F742C082588C19 /* LeadDetailView.swift */; };
-		9C29CC63D26C499D8DAFE309 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B16BB7FA59F42C8A3471E93 /* LoginView.swift */; };
-		1F113A6A4887443ABB914D33 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBBC89C17D24B6A89A6DA6F /* AuthViewModel.swift */; };
-/* End PBXBuildFile section */
+'''
+
+# Add build files
+for f, build_id in build_files.items():
+    file_id = file_refs[f]
+    pbxproj += f'\t\t{build_id} /* {os.path.basename(f)} in Sources */ = {{isa = PBXBuildFile; fileRef = {file_id} /* {os.path.basename(f)} */; }};\n'
+
+pbxproj += '''/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		PRODUCT_REF /* TrusendaCRM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrusendaCRM.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		23214E484FC04F87B64A7E8E /* TrusendaCRMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrusendaCRMApp.swift; sourceTree = "<group>"; };
-		A12D5FF3497E4E66806D8AD5 /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
-		545A88D2706D45AFB1A8B8A1 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		7A4C4428653849258CA10BEF /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
-		05E8176ECD844E5CB11BA304 /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
-		0C9882D92B6E4DC798176439 /* TenantInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenantInfo.swift; sourceTree = "<group>"; };
-		593D4D2980D64EAAB98533C6 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
-		6DE71BCAA49540EF8C5E8677 /* Lead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lead.swift; sourceTree = "<group>"; };
-		B5CE0603E8F94E70AB48D4EF /* APIResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponses.swift; sourceTree = "<group>"; };
-		2AEBAA6292A540F1ACC80FF8 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
-		D96808FAE512453C8C003457 /* DateFormatter+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter+Extensions.swift; sourceTree = "<group>"; };
-		A55BEFF8A2564BDFBD1FF5A5 /* PhoneFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneFormatter.swift; sourceTree = "<group>"; };
-		FCA7A8F3FAC44627906BF7B6 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
-		024494637DA34EF79E11A0B1 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		44B5211FA3354552B8797826 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
-		0E6A849E00B741F3B5E72B77 /* FollowUpListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpListView.swift; sourceTree = "<group>"; };
-		9500B9F7F6A149F3A6798FEF /* LeadListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadListView.swift; sourceTree = "<group>"; };
-		E0761FBC66FA4776BA06D865 /* AddLeadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddLeadView.swift; sourceTree = "<group>"; };
-		DCB0E62500D9429A9706865D /* LeadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadViewModel.swift; sourceTree = "<group>"; };
-		46D48AF575F742C082588C19 /* LeadDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadDetailView.swift; sourceTree = "<group>"; };
-		4B16BB7FA59F42C8A3471E93 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		FFBBC89C17D24B6A89A6DA6F /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
-/* End PBXFileReference section */
+'''
+
+# Add file references
+for f, file_id in file_refs.items():
+    pbxproj += f'\t\t{file_id} /* {os.path.basename(f)} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {os.path.basename(f)}; sourceTree = "<group>"; }};\n'
+
+pbxproj += '''/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FRAMEWORKS_PHASE /* Frameworks */ = {
@@ -87,29 +86,14 @@
 		TRUSENDA_GROUP /* TrusendaCRM */ = {
 			isa = PBXGroup;
 			children = (
-				23214E484FC04F87B64A7E8E /* TrusendaCRMApp.swift */,
-				A12D5FF3497E4E66806D8AD5 /* Endpoints.swift */,
-				545A88D2706D45AFB1A8B8A1 /* APIClient.swift */,
-				7A4C4428653849258CA10BEF /* AuthManager.swift */,
-				05E8176ECD844E5CB11BA304 /* NetworkError.swift */,
-				0C9882D92B6E4DC798176439 /* TenantInfo.swift */,
-				593D4D2980D64EAAB98533C6 /* User.swift */,
-				6DE71BCAA49540EF8C5E8677 /* Lead.swift */,
-				B5CE0603E8F94E70AB48D4EF /* APIResponses.swift */,
-				2AEBAA6292A540F1ACC80FF8 /* KeychainManager.swift */,
-				D96808FAE512453C8C003457 /* DateFormatter+Extensions.swift */,
-				A55BEFF8A2564BDFBD1FF5A5 /* PhoneFormatter.swift */,
-				FCA7A8F3FAC44627906BF7B6 /* Validation.swift */,
-				024494637DA34EF79E11A0B1 /* SettingsView.swift */,
-				44B5211FA3354552B8797826 /* SettingsViewModel.swift */,
-				0E6A849E00B741F3B5E72B77 /* FollowUpListView.swift */,
-				9500B9F7F6A149F3A6798FEF /* LeadListView.swift */,
-				E0761FBC66FA4776BA06D865 /* AddLeadView.swift */,
-				DCB0E62500D9429A9706865D /* LeadViewModel.swift */,
-				46D48AF575F742C082588C19 /* LeadDetailView.swift */,
-				4B16BB7FA59F42C8A3471E93 /* LoginView.swift */,
-				FFBBC89C17D24B6A89A6DA6F /* AuthViewModel.swift */,
-			);
+'''
+
+# Add all source files to group
+for f in swift_files:
+    file_id = file_refs[f]
+    pbxproj += f'\t\t\t\t{file_id} /* {os.path.basename(f)} */,\n'
+
+pbxproj += '''\t\t\t);
 			path = TrusendaCRM;
 			sourceTree = "<group>";
 		};
@@ -181,29 +165,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E636C88E9565412C81411FA8 /* TrusendaCRMApp.swift in Sources */,
-				933CCBAE34AC47BEB2B2BDE3 /* Endpoints.swift in Sources */,
-				30D2B282FFE64E12A8547531 /* APIClient.swift in Sources */,
-				0041BD7959AC4E8CAF849B6C /* AuthManager.swift in Sources */,
-				9F3B4D6830F844C4B44AE95D /* NetworkError.swift in Sources */,
-				821A8B8DBF6F498FBBC298AD /* TenantInfo.swift in Sources */,
-				F95C1ED04FEB48F69443B2C8 /* User.swift in Sources */,
-				41A482E34EA94924BDD10357 /* Lead.swift in Sources */,
-				14707DEA494D45B2A77359C0 /* APIResponses.swift in Sources */,
-				E396CC4866914C87B246B6C0 /* KeychainManager.swift in Sources */,
-				56933E14E18F486EBCBB5429 /* DateFormatter+Extensions.swift in Sources */,
-				D794F8F682FA453B852DE36F /* PhoneFormatter.swift in Sources */,
-				F7E7EECCD80C4826B90AD8C5 /* Validation.swift in Sources */,
-				7F42E5BB234348CFB85F97E3 /* SettingsView.swift in Sources */,
-				0164035851C243FF9F26B2B5 /* SettingsViewModel.swift in Sources */,
-				2F452C84C4494D70980BC88B /* FollowUpListView.swift in Sources */,
-				BABD88A1A9B74B99B778E2BD /* LeadListView.swift in Sources */,
-				8B9AC340840C4E6198F25CDD /* AddLeadView.swift in Sources */,
-				B27FC36C7D5F45BDA54E451F /* LeadViewModel.swift in Sources */,
-				9CF2FDFED84849578AB4F1CA /* LeadDetailView.swift in Sources */,
-				9C29CC63D26C499D8DAFE309 /* LoginView.swift in Sources */,
-				1F113A6A4887443ABB914D33 /* AuthViewModel.swift in Sources */,
-			);
+'''
+
+# Add all source files to compile phase
+for f, build_id in build_files.items():
+    pbxproj += f'\t\t\t\t{build_id} /* {os.path.basename(f)} in Sources */,\n'
+
+pbxproj += '''\t\t\t);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -409,3 +377,12 @@
 	};
 	rootObject = PROJECT_ID /* Project object */;
 }
+'''
+
+# Write the file
+with open('TrusendaCRM.xcodeproj/project.pbxproj', 'w') as f:
+    f.write(pbxproj)
+
+print(f"Generated Xcode project with {len(swift_files)} Swift files")
+for f in sorted(swift_files):
+    print(f"  - {f}")
