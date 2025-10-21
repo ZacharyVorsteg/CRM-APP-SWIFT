@@ -86,8 +86,9 @@ class PropertyViewModel: ObservableObject {
     func calculateMatches(for property: Property, with leads: [Lead]) -> [LeadPropertyMatch] {
         var matches: [LeadPropertyMatch] = []
         
-        // TOTAL POSSIBLE SCORE (all criteria)
-        let MAX_TOTAL_SCORE = 110
+        // REDESIGNED SCORING (emphasizes substantive criteria)
+        // Total: 100 points distributed by importance
+        let MAX_TOTAL_SCORE = 100
         
         print("🔍 Calculating matches for property: \(property.title)")
         print("   Property has: type=\(property.propertyType ?? "missing"), size=\(property.sizeMin ?? "nil")-\(property.sizeMax ?? "nil"), budget=\(property.budget ?? "missing"), industry=\(property.industry ?? "missing"), city=\(property.city ?? "missing")")
@@ -97,36 +98,31 @@ class PropertyViewModel: ObservableObject {
             var reasons: [String] = []
             var missingCriteria: [String] = []
             
-            // Property Type match (30 points)
-            if let propType = property.propertyType, !propType.isEmpty,
-               let leadType = lead.propertyType, !leadType.isEmpty {
-                if propType.lowercased() == leadType.lowercased() {
-                    score += 30
-                    reasons.append("Property type matches (\(propType))")
-                }
-            } else {
-                if property.propertyType == nil || property.propertyType!.isEmpty {
-                    missingCriteria.append("Property type not specified")
-                }
-            }
-            
-            // Transaction Type match (20 points)
-            if let propTrans = property.transactionType, !propTrans.isEmpty,
-               let leadTrans = lead.transactionType, !leadTrans.isEmpty {
-                if propTrans.lowercased() == leadTrans.lowercased() {
-                    score += 20
-                    reasons.append("Transaction type matches (\(propTrans))")
-                }
-            }
-            
-            // Size match (25 points)
+            // SIZE MATCH (40 points) - Most important factor
             if let propMin = property.sizeMin, let propMax = property.sizeMax,
                let leadMin = lead.sizeMin, let leadMax = lead.sizeMax,
                let pMin = Int(propMin), let pMax = Int(propMax),
                let lMin = Int(leadMin), let lMax = Int(leadMax) {
+                
+                // Check if ranges overlap
                 if pMin <= lMax && pMax >= lMin {
-                    score += 25
-                    reasons.append("Size range matches (\(formatNumber(propMin))-\(formatNumber(propMax)) SF)")
+                    // Calculate overlap quality for partial scoring
+                    let overlapStart = max(pMin, lMin)
+                    let overlapEnd = min(pMax, lMax)
+                    let overlapSize = overlapEnd - overlapStart
+                    let leadRangeSize = lMax - lMin
+                    
+                    if overlapSize >= leadRangeSize {
+                        // Property fully contains lead's range - perfect match
+                        score += 40
+                        reasons.append("Perfect size fit (\(formatNumber(propMin))-\(formatNumber(propMax)) SF)")
+                    } else {
+                        // Partial overlap - score proportionally
+                        let overlapPercentage = Double(overlapSize) / Double(leadRangeSize)
+                        let partialScore = Int(40.0 * overlapPercentage)
+                        score += partialScore
+                        reasons.append("Size range overlap (\(formatNumber(propMin))-\(formatNumber(propMax)) SF)")
+                    }
                 }
             } else {
                 if (property.sizeMin == nil || property.sizeMin!.isEmpty) {
@@ -134,43 +130,47 @@ class PropertyViewModel: ObservableObject {
                 }
             }
             
-            // Budget match (15 points)
-            if let propBudget = property.budget, !propBudget.isEmpty,
-               let leadBudget = lead.budget, !leadBudget.isEmpty {
-                if propBudget.lowercased() == leadBudget.lowercased() {
-                    score += 15
-                    reasons.append("Budget aligned (\(propBudget))")
+            // BUDGET MATCH (35 points) - Second most important
+            let budgetScore = calculateBudgetMatch(propertyBudget: property.budget, leadBudget: lead.budget)
+            score += budgetScore.score
+            if let reason = budgetScore.reason {
+                reasons.append(reason)
+            }
+            if budgetScore.score == 0 && (property.budget == nil || property.budget!.isEmpty) {
+                missingCriteria.append("Budget not specified")
+            }
+            
+            // INDUSTRY MATCH (15 points) - Contextual compatibility
+            let industryScore = calculateIndustryMatch(propertyIndustry: property.industry, leadIndustry: lead.industry)
+            score += industryScore.score
+            if let reason = industryScore.reason {
+                reasons.append(reason)
+            }
+            if industryScore.score == 0 && (property.industry == nil || property.industry!.isEmpty) {
+                missingCriteria.append("Industry not specified")
+            }
+            
+            // PROPERTY TYPE (5 points) - Basic filter, low weight
+            if let propType = property.propertyType, !propType.isEmpty,
+               let leadType = lead.propertyType, !leadType.isEmpty {
+                if propType.lowercased() == leadType.lowercased() {
+                    score += 5
+                    reasons.append("Property type: \(propType)")
                 }
             }
             
-            // Industry match (10 points)
-            if let propInd = property.industry, !propInd.isEmpty,
-               let leadInd = lead.industry, !leadInd.isEmpty {
-                if propInd.lowercased() == leadInd.lowercased() {
-                    score += 10
-                    reasons.append("Industry matches (\(propInd))")
-                }
-            } else {
-                if property.industry == nil || property.industry!.isEmpty {
-                    missingCriteria.append("Industry not specified")
-                }
-            }
-            
-            // Location match (10 points)
+            // LOCATION (5 points) - Nice to have
             if let city = property.city, !city.isEmpty,
                let area = lead.preferredArea, !area.isEmpty {
-                if area.lowercased().contains(city.lowercased()) {
-                    score += 10
-                    reasons.append("Location matches (\(city))")
-                }
-            } else {
-                if property.city == nil || property.city!.isEmpty {
-                    missingCriteria.append("Location not specified")
+                if area.lowercased().contains(city.lowercased()) || city.lowercased().contains(area.lowercased()) {
+                    score += 5
+                    reasons.append("Location: \(city)")
                 }
             }
             
-            // HONEST PERCENTAGE: Score against TOTAL possible (110 pts)
-            // This shows the true match quality, accounting for missing data
+            // NOTE: Transaction type (Lease/Sale) is NOT scored
+            // It's assumed to be pre-filtered or a basic requirement
+            
             let matchPercentage = Int((Double(score) / Double(MAX_TOTAL_SCORE)) * 100)
             
             print("   \(lead.name): \(score)/\(MAX_TOTAL_SCORE) points = \(matchPercentage)%")
@@ -178,9 +178,9 @@ class PropertyViewModel: ObservableObject {
                 print("      Missing: \(missingCriteria.joined(separator: ", "))")
             }
             
-            // Show matches with at least 30% of total score
-            // This means at least 2-3 criteria match
-            if matchPercentage >= 30 && reasons.count > 0 {
+            // Only show meaningful matches (at least 40% of possible score)
+            // This ensures substantive criteria are met
+            if matchPercentage >= 40 && reasons.count >= 2 {
                 matches.append(LeadPropertyMatch(
                     id: "\(property.id)-\(lead.id)",
                     property: property,
@@ -188,13 +188,127 @@ class PropertyViewModel: ObservableObject {
                     matchScore: matchPercentage,
                     matchReasons: reasons
                 ))
-                print("   ✅ MATCH! \(lead.name) - \(matchPercentage)% (honest score) - \(reasons.joined(separator: ", "))")
+                print("   ✅ MATCH! \(lead.name) - \(matchPercentage)% - \(reasons.joined(separator: ", "))")
             }
         }
         
         print("🎯 Total matches found: \(matches.count)")
         
         return matches.sorted { $0.matchScore > $1.matchScore }
+    }
+    
+    // MARK: - Smart Budget Matching
+    private func calculateBudgetMatch(propertyBudget: String?, leadBudget: String?) -> (score: Int, reason: String?) {
+        guard let propBudget = propertyBudget, !propBudget.isEmpty,
+              let leadBudget = leadBudget, !leadBudget.isEmpty else {
+            return (0, nil)
+        }
+        
+        // Extract numeric values from budget strings (e.g., "$5,000 - $10,000/mo")
+        let propRange = extractBudgetRange(from: propBudget)
+        let leadRange = extractBudgetRange(from: leadBudget)
+        
+        // If both have numeric ranges, compare overlap
+        if let (propMin, propMax) = propRange, let (leadMin, leadMax) = leadRange {
+            // Check if property budget falls within or overlaps lead's budget
+            if propMin <= leadMax && propMax >= leadMin {
+                let overlapStart = max(propMin, leadMin)
+                let overlapEnd = min(propMax, leadMax)
+                let overlapAmount = overlapEnd - overlapStart
+                let leadRangeSize = leadMax - leadMin
+                
+                let overlapPercentage = Double(overlapAmount) / Double(max(leadRangeSize, 1))
+                let score = Int(35.0 * max(0.5, overlapPercentage)) // Minimum 50% of points for any overlap
+                
+                return (score, "Budget aligned ($\(formatBudget(propMin))-$\(formatBudget(propMax))/mo)")
+            }
+        }
+        
+        // Fallback to string comparison
+        if propBudget.lowercased() == leadBudget.lowercased() {
+            return (35, "Budget matches (\(propBudget))")
+        }
+        
+        return (0, nil)
+    }
+    
+    // Extract min and max budget from string (handles "$5,000 - $10,000/mo" format)
+    private func extractBudgetRange(from budgetString: String) -> (Int, Int)? {
+        // Remove currency symbols, commas, and "/mo"
+        let cleaned = budgetString.replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: "/mo", with: "")
+            .replacingOccurrences(of: "/month", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        
+        // Split on dash or hyphen
+        let parts = cleaned.components(separatedBy: CharacterSet(charactersIn: "-–—"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .compactMap { Int($0) }
+        
+        if parts.count == 2 {
+            return (parts[0], parts[1])
+        } else if parts.count == 1 {
+            // Single value - use as both min and max
+            return (parts[0], parts[0])
+        }
+        
+        return nil
+    }
+    
+    private func formatBudget(_ amount: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
+    }
+    
+    // MARK: - Smart Industry Matching with Umbrella Categories
+    private func calculateIndustryMatch(propertyIndustry: String?, leadIndustry: String?) -> (score: Int, reason: String?) {
+        guard let propInd = propertyIndustry, !propInd.isEmpty,
+              let leadInd = leadIndustry, !leadInd.isEmpty else {
+            return (0, nil)
+        }
+        
+        let propLower = propInd.lowercased()
+        let leadLower = leadInd.lowercased()
+        
+        // Exact match
+        if propLower == leadLower {
+            return (15, "Industry: \(propInd)")
+        }
+        
+        // Define industry umbrella categories (similar operational needs)
+        let industrialLogistics = ["construction", "contracting", "distribution", "logistics", "warehousing", "manufacturing", "wholesale"]
+        let retail = ["retail", "e-commerce", "consumer goods", "fashion", "grocery"]
+        let foodBeverage = ["restaurant", "food service", "catering", "brewery", "food production"]
+        let automotive = ["automotive", "auto repair", "auto body", "auto parts", "dealership"]
+        let healthWellness = ["healthcare", "medical", "fitness", "spa", "wellness"]
+        let technology = ["technology", "software", "it services", "data center", "tech startup"]
+        let professional = ["office", "professional services", "consulting", "legal", "accounting"]
+        let creative = ["creative", "design", "marketing", "advertising", "media"]
+        
+        let categories = [
+            industrialLogistics,
+            retail,
+            foodBeverage,
+            automotive,
+            healthWellness,
+            technology,
+            professional,
+            creative
+        ]
+        
+        // Check if both industries fall under same umbrella
+        for category in categories {
+            let propInCategory = category.contains { propLower.contains($0) }
+            let leadInCategory = category.contains { leadLower.contains($0) }
+            
+            if propInCategory && leadInCategory {
+                return (12, "Compatible industry (\(propInd))")
+            }
+        }
+        
+        return (0, nil)
     }
     
     private func formatNumber(_ value: String) -> String {

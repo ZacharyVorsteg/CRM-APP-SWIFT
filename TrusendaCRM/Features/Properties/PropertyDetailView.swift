@@ -180,13 +180,13 @@ struct PropertyDetailView: View {
                                             // Info
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(match.lead.name)
-                                                    .font(.system(size: 15, weight: .semibold))
+                                                    .font(.system(size: 15, weight: .bold))
                                                     .foregroundColor(.primary)
                                                 
                                                 if let company = match.lead.company {
                                                     Text(company)
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.secondary)
+                                                        .font(.system(size: 13, weight: .medium))
+                                                        .foregroundColor(.primary.opacity(0.8))
                                                 }
                                                 
                                                 // First match reason

@@ -670,13 +670,13 @@ struct LeadMatchCard: View {
                 // Lead Info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(match.lead.name)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.primary)
                     
                     if let company = match.lead.company {
                         Text(company)
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.primary.opacity(0.8))
                     }
                 }
                 
