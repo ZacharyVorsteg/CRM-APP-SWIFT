@@ -67,94 +67,10 @@ struct PropertiesListView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Match notification badge
-                if let lastProperty = viewModel.properties.first,
-                   !viewModel.calculateMatches(for: lastProperty, with: leadViewModel.leads).isEmpty,
-                   !UserDefaults.standard.bool(forKey: "seen_property_\(lastProperty.id)") {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Button {
-                                selectedProperty = lastProperty
-                                UserDefaults.standard.set(true, forKey: "seen_property_\(lastProperty.id)")
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "bell.badge.fill")
-                                        .font(.title3)
-                                    Text("New Match!")
-                                        .font(.headline)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(Color.orange)
-                                .cornerRadius(20)
-                                .shadow(color: Color.orange.opacity(0.4), radius: 8, x: 0, y: 4)
-                            }
-                            .padding()
-                        }
-                        Spacer()
-                    }
-                    .zIndex(100)
-                }
+                matchNotificationBadge
                 
                 if filteredProperties.isEmpty && !viewModel.isLoading {
-                    VStack(spacing: 24) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.primaryBlue.opacity(0.1), Color.successGreen.opacity(0.15)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 140, height: 140)
-                            
-                            Image(systemName: "building.2.fill")
-                                .font(.system(size: 70, weight: .regular))
-                                .foregroundColor(.primaryBlue)
-                                .symbolRenderingMode(.hierarchical)
-                        }
-                        .padding(.bottom, 8)
-                        
-                        VStack(spacing: 12) {
-                            Text("No Properties Yet")
-                                .font(.title2.bold())
-                                .foregroundColor(.primary)
-                            
-                            Text("Add your first property listing and we'll automatically match it with potential leads.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
-                                .padding(.horizontal, 40)
-                        }
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "lightbulb.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.orange)
-                            Text("Tip: Properties are matched with leads based on type, size, and location")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.primaryBlue.opacity(0.1), Color.successGreen.opacity(0.15)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
-                        .padding(.horizontal, 30)
-                    }
-                    .padding(.vertical, 60)
+                    emptyStateView
                 } else {
                     GeometryReader { geometry in
                         ScrollView {
@@ -302,6 +218,94 @@ struct PropertiesListView: View {
                     .presentationDetents([.medium, .large])
             }
         }
+    }
+    
+    // MARK: - View Components
+    
+    @ViewBuilder
+    private var matchNotificationBadge: some View {
+        if let lastProperty = viewModel.properties.first,
+           !viewModel.calculateMatches(for: lastProperty, with: leadViewModel.leads).isEmpty,
+           !UserDefaults.standard.bool(forKey: "seen_property_\(lastProperty.id)") {
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        selectedProperty = lastProperty
+                        UserDefaults.standard.set(true, forKey: "seen_property_\(lastProperty.id)")
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "bell.badge.fill")
+                                .font(.title3)
+                            Text("New Match!")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.orange)
+                        .cornerRadius(20)
+                        .shadow(color: Color.orange.opacity(0.4), radius: 8, x: 0, y: 4)
+                    }
+                    .padding()
+                }
+                Spacer()
+            }
+            .zIndex(100)
+        }
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.primaryBlue.opacity(0.1), Color.successGreen.opacity(0.15)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 140, height: 140)
+                
+                Image(systemName: "building.2.fill")
+                    .font(.system(size: 70, weight: .regular))
+                    .foregroundColor(.primaryBlue)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .padding(.bottom, 8)
+            
+            VStack(spacing: 12) {
+                Text("No Properties Yet")
+                    .font(.title2.bold())
+                    .foregroundColor(.primary)
+                
+                Text("Add your first property listing and we'll automatically match it with potential leads.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 40)
+            }
+            
+            HStack(spacing: 8) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.orange)
+                Text("Tip: Properties are matched with leads based on type, size, and location")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.orange.opacity(0.1))
+            )
+            .padding(.horizontal, 30)
+        }
+        .padding(.vertical, 60)
     }
     
     private func deleteSelectedProperties() async {
@@ -557,7 +561,7 @@ struct PropertyMatchesSheet: View {
     }
     
     private var propertyURL: String {
-        return "https://trusenda.com/property/\(property.id.uuidString.replacingOccurrences(of: "\u{2011}", with: "-"))"
+        return "https://trusenda.com/property/\(property.id.replacingOccurrences(of: "\u{2011}", with: "-"))"
     }
     
     private var shareText: String {
@@ -565,7 +569,7 @@ struct PropertyMatchesSheet: View {
     }
     
     private func trackedURL(for lead: Lead) -> String {
-        return "\(propertyURL)?leadId=\(lead.id.uuidString)&leadName=\(lead.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")\(lead.email != nil ? "&leadEmail=\(lead.email!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.phone != nil ? "&leadPhone=\(lead.phone!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")"
+        return "\(propertyURL)?leadId=\(lead.id)&leadName=\(lead.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")\(lead.email != nil ? "&leadEmail=\(lead.email!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.phone != nil ? "&leadPhone=\(lead.phone!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")"
     }
 }
 
