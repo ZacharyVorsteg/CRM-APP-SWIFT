@@ -152,23 +152,24 @@ struct LeadPropertyMatch: Identifiable {
     }
     
     var matchQuality: MatchQuality {
+        // Based on honest scoring against 110 total points
         switch matchScore {
-        case 90...100: return .excellent
-        case 75..<90: return .good
-        case 60..<75: return .fair
-        default: return .poor
+        case 80...100: return .excellent  // 88+ pts (almost all criteria)
+        case 60..<80: return .good        // 66+ pts (most criteria)
+        case 45..<60: return .fair        // 50+ pts (half criteria)
+        default: return .potential        // 30+ pts (some criteria)
         }
     }
     
     enum MatchQuality {
-        case excellent, good, fair, poor
+        case excellent, good, fair, potential
         
         var color: String {
             switch self {
             case .excellent: return "green"
             case .good: return "blue"
             case .fair: return "orange"
-            case .poor: return "gray"
+            case .potential: return "yellow"
             }
         }
         
@@ -176,8 +177,8 @@ struct LeadPropertyMatch: Identifiable {
             switch self {
             case .excellent: return "Excellent Match"
             case .good: return "Good Match"
-            case .fair: return "Potential Match"
-            case .poor: return "Low Match"
+            case .fair: return "Fair Match"
+            case .potential: return "Potential Match"
             }
         }
     }
