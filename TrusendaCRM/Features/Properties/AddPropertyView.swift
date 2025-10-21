@@ -25,7 +25,8 @@ struct AddPropertyView: View {
     @State private var features = ""
     @State private var status = "Available"
     @State private var selectedPhotos: [PhotosPickerItem] = []
-    @State private var images: [String] = []
+    @State private var loadedImages: [UIImage] = []
+    @State private var imageDataStrings: [String] = []
     @State private var isSubmitting = false
     @State private var showError = false
     @State private var errorMessage = ""
@@ -244,10 +245,43 @@ struct AddPropertyView: View {
                             Text("Add Photos")
                                 .foregroundColor(.primaryBlue)
                             Spacer()
-                            if !images.isEmpty {
-                                Text("\(images.count) photos")
+                            if !loadedImages.isEmpty {
+                                Text("\(loadedImages.count) selected")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.successGreen)
+                            }
+                        }
+                    }
+                    .onChange(of: selectedPhotos) { newItems in
+                        Task {
+                            await loadPhotos(from: newItems)
+                        }
+                    }
+                    
+                    // Photo preview
+                    if !loadedImages.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(Array(loadedImages.enumerated()), id: \.offset) { index, image in
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 80, height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .overlay(
+                                            Button {
+                                                loadedImages.remove(at: index)
+                                                imageDataStrings.remove(at: index)
+                                            } label: {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundColor(.white)
+                                                    .background(Circle().fill(Color.black.opacity(0.6)))
+                                            }
+                                            .frame(width: 24, height: 24)
+                                            .offset(x: -4, y: 4),
+                                            alignment: .topTrailing
+                                        )
+                                }
                             }
                         }
                     }
@@ -385,8 +419,8 @@ struct AddPropertyView: View {
             leaseTerm: leaseTerm.isEmpty ? nil : leaseTerm,
             industry: industry.isEmpty ? nil : industry,
             availableDate: availableDate.isEmpty ? nil : availableDate,
-            images: images.isEmpty ? nil : images,
-            primaryImage: images.first,
+            images: imageDataStrings.isEmpty ? nil : imageDataStrings,
+            primaryImage: imageDataStrings.first,
             description: description.isEmpty ? nil : description,
             features: features.isEmpty ? nil : features,
             status: status
@@ -413,6 +447,46 @@ struct AddPropertyView: View {
         }
         
         isSubmitting = false
+    }
+    
+    // Load and convert photos to base64 for storage
+    private func loadPhotos(from items: [PhotosPickerItem]) async {
+        loadedImages.removeAll()
+        imageDataStrings.removeAll()
+        
+        for item in items {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                // Resize image to reasonable size (max 800px width)
+                let resizedImage = resizeImage(image: image, maxWidth: 800)
+                loadedImages.append(resizedImage)
+                
+                // Convert to base64 for storage
+                if let jpegData = resizedImage.jpegData(compressionQuality: 0.7) {
+                    let base64String = "data:image/jpeg;base64," + jpegData.base64EncodedString()
+                    imageDataStrings.append(base64String)
+                    print("📸 Image converted: \(jpegData.count / 1024)KB")
+                }
+            }
+        }
+        
+        print("✅ Loaded \(loadedImages.count) photos")
+    }
+    
+    // Resize image to max width while maintaining aspect ratio
+    private func resizeImage(image: UIImage, maxWidth: CGFloat) -> UIImage {
+        guard image.size.width > maxWidth else { return image }
+        
+        let ratio = maxWidth / image.size.width
+        let newHeight = image.size.height * ratio
+        let newSize = CGSize(width: maxWidth, height: newHeight)
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return resizedImage ?? image
     }
 }
 

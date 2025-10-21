@@ -159,9 +159,18 @@ struct PropertyGridCell: View {
         VStack(spacing: 0) {
             ZStack {
                 if let primaryImage = property.primaryImage, !primaryImage.isEmpty {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: cellWidth, height: cellWidth)
+                    // Display base64 encoded image
+                    if let imageData = loadBase64Image(primaryImage) {
+                        Image(uiImage: imageData)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: cellWidth, height: cellWidth)
+                            .clipped()
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: cellWidth, height: cellWidth)
+                    }
                 } else {
                     Rectangle()
                         .fill(
@@ -249,6 +258,24 @@ struct PropertyGridCell: View {
         case "Sold": return .gray
         default: return .primaryBlue
         }
+    }
+    
+    // Load base64 encoded image
+    private func loadBase64Image(_ base64String: String) -> UIImage? {
+        // Remove data URI prefix if present
+        var imageString = base64String
+        if imageString.hasPrefix("data:image") {
+            if let commaRange = imageString.range(of: ",") {
+                imageString = String(imageString[commaRange.upperBound...])
+            }
+        }
+        
+        guard let imageData = Data(base64Encoded: imageString, options: .ignoreUnknownCharacters) else {
+            print("❌ Failed to decode base64 image")
+            return nil
+        }
+        
+        return UIImage(data: imageData)
     }
 }
 
