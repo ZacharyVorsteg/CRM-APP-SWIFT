@@ -6,7 +6,9 @@ import Combine
 class LeadViewModel: ObservableObject {
     @Published var leads: [Lead] = []
     @Published var filteredLeads: [Lead] = []
+    @Published var displayedLeads: [Lead] = [] // For pagination display
     @Published var isLoading = false
+    @Published var isLoadingMore = false
     @Published var error: String?
     @Published var successMessage: String?
     
@@ -26,6 +28,10 @@ class LeadViewModel: ObservableObject {
     @Published var propertyTypeFilter: String?
     @Published var timelineFilter: String?
     
+    // Pagination (client-side for now - fast and reliable)
+    private var currentDisplayCount = 20
+    private let pageSize = 20
+    
     private let client = APIClient.shared
     
     // MARK: - Fetch Leads
@@ -42,14 +48,17 @@ class LeadViewModel: ObservableObject {
             isBlocked = response.isBlocked
             gracePeriodDays = response.gracePeriodDaysRemaining
             
-            // Calculate follow-up count
-            followUpCount = leads.filter { $0.needsAttention }.count
+            // Calculate follow-up count (matches web app logic)
+            // Web app checks if followUpOn date is today or earlier
+            followUpCount = leads.filter { $0.isFollowUpDue }.count
             
             // Apply filters
             applyFilters()
             
         } catch {
             self.error = error.localizedDescription
+            print("❌ Error fetching leads:", error)
+            clearMessageAfterDelay()
         }
         
         isLoading = false
@@ -58,7 +67,7 @@ class LeadViewModel: ObservableObject {
     // MARK: - Create Lead
     func createLead(_ payload: LeadCreatePayload) async throws {
         // Check plan limits
-        if leads.count >= maxLeads && !AuthManager.shared.currentUser?.isPro ?? false {
+        if leads.count >= maxLeads && !(AuthManager.shared.currentUser?.isPro ?? false) {
             throw NetworkError.serverError(400, "Plan limit reached. Upgrade to Pro for unlimited leads.")
         }
         
@@ -71,26 +80,88 @@ class LeadViewModel: ObservableObject {
         leads.insert(response.customer, at: 0)
         applyFilters()
         
-        successMessage = "✅ Lead added successfully"
-        clearMessageAfterDelay()
+        // Don't show ViewModel success message - PremiumSuccessToast handles this
+        // successMessage = "✅ Lead added successfully"
+        // clearMessageAfterDelay()
     }
     
     // MARK: - Update Lead
-    func updateLead(id: String, updates: LeadUpdatePayload) async throws {
-        let response: LeadActionResponse = try await client.put(
-            endpoint: .customer(id: id),
-            body: updates
-        )
+    func updateLead(id: String, updates: LeadUpdatePayload, optimistic: Bool = false) async throws {
+        print("📝 updateLead() called for ID: \(id)")
+        print("📝 Current leads count: \(leads.count)")
+        print("📝 Current statusFilter: \(statusFilter ?? "none")")
         
-        // Update in local array
-        if let index = leads.firstIndex(where: { $0.id == id }) {
-            leads[index] = response.customer
+        // Find the lead index
+        guard let index = leads.firstIndex(where: { $0.id == id }) else {
+            print("⚠️ Lead not found in local array!")
+            throw NetworkError.serverError(404, "Lead not found")
         }
         
-        applyFilters()
+        // Save original state for rollback
+        let originalLead = leads[index]
+        print("💾 Original lead BEFORE update: id=\(originalLead.id), name='\(originalLead.name)', status=\(originalLead.status)")
         
-        successMessage = "✅ Lead updated"
-        clearMessageAfterDelay()
+        // Optimistic update: Update UI immediately if requested
+        if optimistic {
+            print("⚡️ Applying optimistic update...")
+            var updatedLead = originalLead
+            
+            // Apply the updates to the local copy
+            if let status = updates.status { updatedLead.status = status }
+            if let name = updates.name { updatedLead.name = name }
+            if let email = updates.email { updatedLead.email = email }
+            if let phone = updates.phone { updatedLead.phone = phone }
+            if let company = updates.company { updatedLead.company = company }
+            if let budget = updates.budget { updatedLead.budget = budget }
+            if let sizeMin = updates.sizeMin { updatedLead.sizeMin = sizeMin }
+            if let sizeMax = updates.sizeMax { updatedLead.sizeMax = sizeMax }
+            if let propertyType = updates.propertyType { updatedLead.propertyType = propertyType }
+            if let transactionType = updates.transactionType { updatedLead.transactionType = transactionType }
+            if let notes = updates.notes { updatedLead.notes = notes }
+            if let followUpOn = updates.followUpOn { updatedLead.followUpOn = followUpOn }
+            if let followUpNotes = updates.followUpNotes { updatedLead.followUpNotes = followUpNotes }
+            
+            // Update UI immediately
+            leads[index] = updatedLead
+            applyFilters()
+            print("⚡️ Optimistic update applied to UI")
+        }
+        
+        do {
+            // Make API call
+            let response: LeadActionResponse = try await client.put(
+                endpoint: .customer(id: id),
+                body: updates
+            )
+            
+            print("📥 Response received: \(response.customer.name) - \(response.customer.status)")
+            print("📥 Response customer ID: \(response.customer.id)")
+            print("📥 Response full customer: name='\(response.customer.name)', email=\(response.customer.email ?? "nil"), status=\(response.customer.status)")
+            
+            // Update with server response (overrides optimistic update)
+            leads[index] = response.customer
+            print("📝 Local lead updated from server: \(leads[index].name) - \(leads[index].status)")
+            print("📝 Local lead full: id=\(leads[index].id), name='\(leads[index].name)', status=\(leads[index].status)")
+            
+            applyFilters()
+            print("📝 Filtered leads after: \(filteredLeads.count)")
+            print("📝 Displayed leads after: \(displayedLeads.count)")
+            
+            successMessage = "✅ Lead updated"
+            clearMessageAfterDelay()
+            
+        } catch {
+            // Rollback optimistic update on error
+            if optimistic {
+                print("❌ Update failed, rolling back optimistic changes...")
+                leads[index] = originalLead
+                applyFilters()
+                print("🔄 Rollback complete")
+            }
+            
+            // Re-throw the error
+            throw error
+        }
     }
     
     // MARK: - Delete Lead
@@ -101,8 +172,9 @@ class LeadViewModel: ObservableObject {
         leads.removeAll { $0.id == id }
         applyFilters()
         
-        successMessage = "✅ Lead deleted"
-        clearMessageAfterDelay()
+        // Don't show ViewModel success message - UI handles this with premium toasts
+        // successMessage = "✅ Lead deleted"
+        // clearMessageAfterDelay()
     }
     
     // MARK: - Bulk Delete
@@ -130,17 +202,40 @@ class LeadViewModel: ObservableObject {
     }
     
     func markContacted(leadId: String) async throws {
+        // Get current lead to determine status progression
+        guard let currentLead = leads.first(where: { $0.id == leadId }) else {
+            throw NetworkError.serverError(404, "Lead not found")
+        }
+        
+        let oldStatus = currentLead.status
+        
         struct ContactedRequest: Codable {
             let lead_id: String
         }
         
         let request = ContactedRequest(lead_id: leadId)
-        try await client.post(endpoint: .leadMarkContacted, body: request)
+        let response: ContactedResponse = try await client.post(endpoint: .leadMarkContacted, body: request)
         
-        // Refresh leads
+        // Determine new status from response
+        let newStatus = response.lead.status
+        
+        // Refresh leads with animation-ready update
         await fetchLeads()
         
-        successMessage = "✅ Marked as contacted"
+        // Intelligent success message based on status progression
+        if oldStatus != newStatus {
+            switch (oldStatus, newStatus) {
+            case ("Cold", "Warm"):
+                successMessage = "✅ Contact made! Lead now Warm"
+            case ("Warm", "Hot"):
+                successMessage = "✅ Great! Lead advanced to Hot"
+            default:
+                successMessage = "✅ Marked as contacted"
+            }
+        } else {
+            successMessage = "✅ Marked as contacted"
+        }
+        
         clearMessageAfterDelay()
     }
     
@@ -150,7 +245,7 @@ class LeadViewModel: ObservableObject {
         
         // Follow-ups only
         if showFollowUpsOnly {
-            filtered = filtered.filter { $0.needsAttention }
+            filtered = filtered.filter { $0.isFollowUpDue }
         }
         
         // Search
@@ -179,6 +274,49 @@ class LeadViewModel: ObservableObject {
         }
         
         filteredLeads = filtered
+        
+        // Apply pagination for performance (display first page initially)
+        currentDisplayCount = pageSize
+        updateDisplayedLeads()
+    }
+    
+    // MARK: - Pagination (Client-Side for Performance)
+    func loadMoreLeadsIfNeeded(currentLead: Lead) {
+        // Check if we're near the end of displayed leads
+        let thresholdIndex = displayedLeads.index(displayedLeads.endIndex, offsetBy: -3, limitedBy: displayedLeads.startIndex) ?? displayedLeads.startIndex
+        
+        if let index = displayedLeads.firstIndex(where: { $0.id == currentLead.id }),
+           index >= thresholdIndex,
+           displayedLeads.count < filteredLeads.count,
+           !isLoadingMore {
+            loadMoreLeads()
+        }
+    }
+    
+    private func loadMoreLeads() {
+        guard !isLoadingMore else { return }
+        
+        isLoadingMore = true
+        
+        // Simulate brief loading for smooth UX
+        Task {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            
+            currentDisplayCount += pageSize
+            updateDisplayedLeads()
+            
+            isLoadingMore = false
+        }
+    }
+    
+    func resetPagination() {
+        currentDisplayCount = pageSize
+        updateDisplayedLeads()
+    }
+    
+    private func updateDisplayedLeads() {
+        let endIndex = min(currentDisplayCount, filteredLeads.count)
+        displayedLeads = Array(filteredLeads.prefix(endIndex))
     }
     
     // MARK: - Sorting
@@ -212,6 +350,7 @@ class LeadViewModel: ObservableObject {
         Task {
             try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
             successMessage = nil
+            error = nil
         }
     }
     

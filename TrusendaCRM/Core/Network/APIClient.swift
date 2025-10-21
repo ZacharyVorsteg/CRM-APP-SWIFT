@@ -19,6 +19,8 @@ class APIClient {
         
         self.encoder = JSONEncoder()
         self.encoder.dateEncodingStrategy = .iso8601
+        // Output formatting for debugging
+        self.encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     }
     
     // MARK: - GET Request
@@ -103,8 +105,16 @@ class APIClient {
         
         request.httpBody = try encoder.encode(body)
         
+        // Debug logging
+        if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
+            print("📤 PUT \(url)")
+            print("📦 Body: \(bodyString)")
+        }
+        
         if requiresAuth {
             try await addAuthHeader(to: &request)
+            // Log that auth header was added (not the token itself for security)
+            print("🔐 Authorization header added")
         }
         
         return try await performRequest(request)
@@ -127,7 +137,12 @@ class APIClient {
             try await addAuthHeader(to: &request)
         }
         
-        let _: SuccessResponse = try await performRequest(request)
+        // Backend returns { ok: true } for delete operations
+        struct DeleteResponse: Codable {
+            let ok: Bool
+        }
+        
+        let _: DeleteResponse = try await performRequest(request)
     }
     
     // MARK: - Perform Request
@@ -144,6 +159,11 @@ class APIClient {
             case 200...299:
                 // Success
                 do {
+                    // Log the raw response for debugging
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("📨 Raw response: \(responseString)")
+                    }
+                    
                     let decoded = try decoder.decode(T.self, from: data)
                     return decoded
                 } catch {
@@ -164,6 +184,8 @@ class APIClient {
             case 400...499:
                 // Client error
                 let errorMsg = try? decoder.decode(ErrorResponse.self, from: data)
+                let errorMessage = errorMsg?.error ?? String(data: data, encoding: .utf8)
+                print("⚠️ Client error \(httpResponse.statusCode): \(errorMessage ?? "Unknown")")
                 throw NetworkError.serverError(httpResponse.statusCode, errorMsg?.error)
                 
             case 500...599:

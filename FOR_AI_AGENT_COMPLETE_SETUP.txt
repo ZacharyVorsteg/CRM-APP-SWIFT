@@ -1,0 +1,138 @@
+=== COMPLETE AI AGENT PROMPT FOR APP STORE CONNECT ===
+
+OBJECTIVE: Set up Trusenda CRM iOS app in Apple App Store Connect for TestFlight internal testing.
+
+CONTEXT:
+- This is an iOS app built in Xcode
+- Bundle ID: com.trusenda.crm
+- Developer: Zachary Vorsteg (zacharyvorsteg@gmail.com)
+- Purpose: TestFlight internal testing (not public App Store submission yet)
+- The user will log into appstoreconnect.apple.com before you start
+
+PREREQUISITES BEFORE STARTING:
+- User must be logged into https://appstoreconnect.apple.com
+- User should confirm you can see the "Apps" or "My Apps" page
+- User has Apple Developer Program membership active
+
+=== TASK 1: CREATE APP ENTRY ===
+
+Navigate to: https://appstoreconnect.apple.com
+
+Step 1: Verify you're on the Apps page
+- You should see "My Apps" or "Apps" heading
+- There may be a list of apps, or it may be empty
+- Confirm with user you're on the right page
+
+Step 2: Create New App
+- Locate and click the blue "+" or "Add" button (usually top-left area)
+- Select "New App" from the dropdown menu
+- A form titled "New App" should appear
+
+Step 3: Fill in Required Fields (EXACT VALUES)
+
+Platform Selection:
+- Checkbox: Check "iOS"
+- Do NOT check visionOS, macOS, or tvOS
+
+Name:
+- Enter exactly: TrusendaCRM
+- (This is temporary for TestFlight, can be changed later)
+- If name is taken, try: "Trusenda CRM" or "TrusendaCRM Test"
+
+Primary Language:
+- Dropdown: Select "English (U.S.)"
+
+Bundle ID:
+- This is a dropdown/search field
+- Type: com.trusenda.crm
+- Select it when it appears in the list
+- It should show "Xcode iOS App" or similar next to it
+- CRITICAL: If it does NOT appear in the list, STOP and tell user "Bundle ID needs to be registered first"
+
+SKU:
+- Enter: trusenda-001
+- (This is just internal tracking, can be any unique string)
+
+User Access:
+- Radio button: Select "Full Access" (usually default)
+
+Step 4: Create the App
+- Click the blue "Create" button (bottom of form)
+- Wait for page to load (2-5 seconds)
+- You should now see the app's main page with multiple tabs
+
+Step 5: Navigate to TestFlight
+- Look for tabs at the top: "App Store", "TestFlight", "Activity"
+- Click the "TestFlight" tab
+- Confirm you're on the TestFlight section
+- You should see "Builds" and "Internal Testing" in the left sidebar
+
+=== TASK 2: PREPARE FOR BUILD UPLOAD ===
+
+You're done with browser setup for now! The app entry is created.
+
+Tell the user:
+"App created successfully in App Store Connect. The TestFlight tab is ready. Now proceed to Xcode to archive and upload your build. After the build is uploaded and processed (takes ~15 minutes), come back here and I'll help you add internal testers."
+
+=== TASK 3: ADD INTERNAL TESTER (Do this AFTER build is uploaded) ===
+
+After user tells you the build is uploaded and processed:
+
+Step 1: Go to Internal Testing
+- On the TestFlight tab
+- Click "Internal Testing" in left sidebar
+- You may see "No groups" or a default group
+
+Step 2: Create or Select Tester Group
+- If there's a default group (like "App Store Connect Users"), select it
+- Otherwise, click "+" to create a new group
+- Name it "Internal Team"
+
+Step 3: Add Tester
+- Click the "+" next to "Testers" or "Add Testers"
+- Enter email: zacharyvorsteg@gmail.com
+- Click "Add"
+- You may see a list of App Store Connect users - select the user
+
+Step 4: Enable Testing
+- Make sure the build is selected for this tester group
+- Toggle should be ON/green
+- Click "Save" if there's a save button
+
+Confirmation: User should receive an email invitation to test the app via TestFlight.
+
+=== COMMON ISSUES & SOLUTIONS ===
+
+Issue: "Bundle ID com.trusenda.crm not in dropdown"
+Solution: Tell user: "The Bundle ID hasn't been registered yet. You need to register it at developer.apple.com/account → Identifiers first."
+
+Issue: "App name already taken"
+Solution: Try these alternatives:
+- Trusenda CRM
+- Trusenda - Commercial CRM
+- TrusendaCRM for Business
+
+Issue: "Can't find the + button"
+Solution: Look for:
+- Blue "+" near "My Apps"
+- "Add" button
+- "Create New App" link
+
+Issue: "Don't see TestFlight tab"
+Solution: 
+- Refresh the page
+- Make sure app was created successfully
+- Check you're on the app's detail page, not the apps list
+
+=== SUCCESS CRITERIA ===
+
+You're done when:
+✓ App named "TrusendaCRM" exists in My Apps
+✓ You can click into the app and see the TestFlight tab
+✓ TestFlight tab shows "Internal Testing" in sidebar
+✓ No errors or red warnings
+
+Tell user: "Setup complete! Now archive and upload your build from Xcode, then come back and I'll add you as a tester."
+
+=== END OF PROMPT ===
+

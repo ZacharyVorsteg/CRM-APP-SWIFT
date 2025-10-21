@@ -1,0 +1,57 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         🔍 COMPREHENSIVE DIAGNOSTICS - Build & Monitor           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+ENHANCED LOGGING ADDED TO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Status toggle start (LeadListView)
+✅ API request/response (APIClient)
+✅ Local array updates (LeadViewModel)
+✅ Filter application (LeadViewModel)
+✅ Lead counts at each step
+
+BUILD & TEST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Product → Build (⌘+B)
+2. Product → Run (⌘+R)
+3. Open Debug Console (⌘+Shift+Y)
+
+TEST STATUS TOGGLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Tap any status badge
+2. Select different status
+3. WATCH CONSOLE - You'll see:
+
+🔄 Updating lead {id} from Cold to Warm
+📤 PUT https://trusenda.com/...
+📦 Body: { "status" : "Warm" }
+✅ Status updated successfully to Warm
+📝 updateLead() called for ID: {id}
+📝 Current leads count: 3
+📝 Current statusFilter: none
+📥 Response received: {Name} - Warm
+📝 Updating local lead at index {n}
+📝 Local lead updated: {Name} - Warm
+📝 Applying filters...
+📝 Leads before filter: 3
+📝 Filtered leads after: 3
+📝 Displayed leads after: 3
+
+WHAT TO CHECK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Does "Filtered leads after" equal total leads?
+✅ Does "Displayed leads after" equal filtered leads?
+✅ Is statusFilter "none" or is it active?
+✅ Does the lead name appear in "Response received"?
+✅ Does "Local lead updated" show correct status?
+
+If "Filtered leads after" = 0, that's the problem!
+If statusFilter is active, that's why leads disappear!
+
+Copy console output and share it for analysis.
+
+Last Updated: October 17, 2025 9:16 AM PST

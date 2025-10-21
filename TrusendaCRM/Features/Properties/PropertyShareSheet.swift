@@ -6,9 +6,22 @@ struct PropertyShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLead: Lead?
     
-    // Generate shareable URL
+    // Sanitize UUID to prevent non-breaking hyphens and ensure valid format
+    private var sanitizedPropertyID: String {
+        // Replace any Unicode hyphens with standard ASCII hyphen
+        return property.id
+            .replacingOccurrences(of: "\u{2011}", with: "-")  // Non-breaking hyphen
+            .replacingOccurrences(of: "\u{2010}", with: "-")  // Hyphen
+            .replacingOccurrences(of: "\u{2013}", with: "-")  // En dash
+            .replacingOccurrences(of: "\u{2014}", with: "-")  // Em dash
+            .replacingOccurrences(of: "\u{2212}", with: "-")  // Minus sign
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    // Generate shareable URL with sanitized UUID
     private var propertyURL: String {
-        return "https://trusenda.com/property/\(property.id)"
+        return "https://trusenda.com/property/\(sanitizedPropertyID)"
     }
     
     // Share message for leads
@@ -98,24 +111,26 @@ struct PropertyShareSheet: View {
                 }
                 
                 VStack(spacing: 12) {
-                    // Share URL button
-                    ShareLink(item: propertyURL) {
-                        HStack {
-                            Image(systemName: "link.circle.fill")
-                            Text("Share Property Link")
-                        }
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    // Share URL button - use URL object to prevent encoding issues
+                    if let shareURL = URL(string: propertyURL) {
+                        ShareLink(item: shareURL) {
+                            HStack {
+                                Image(systemName: "link.circle.fill")
+                                Text("Share Property Link")
+                            }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .cornerRadius(12)
+                            .cornerRadius(12)
+                        }
                     }
                     
                     // Copy URL button
@@ -136,12 +151,14 @@ struct PropertyShareSheet: View {
                         )
                     }
                     
-                    // URL Preview
+                    // URL Preview - use monospaced font to prevent hyphen replacement
                     Text(propertyURL)
-                        .font(.caption)
+                        .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
                         .padding(.top, 4)
+                        .textSelection(.enabled)  // Allow selection for verification
+                        .lineLimit(nil)  // Prevent truncation
                 }
                 .padding()
             }
@@ -169,10 +186,20 @@ struct PropertyShareSheet: View {
     }
     
     private func copyToClipboard() {
+        // Copy as plain text with sanitized UUID to prevent encoding issues
         UIPasteboard.general.string = propertyURL
+        
+        // Also set URL object to ensure proper URL handling
+        if let url = URL(string: propertyURL) {
+            UIPasteboard.general.url = url
+        }
         
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
+        
+        print("📋 Copied to clipboard:", propertyURL)
+        print("   Property ID:", sanitizedPropertyID)
+        print("   Full length:", propertyURL.count, "characters")
     }
 }
 

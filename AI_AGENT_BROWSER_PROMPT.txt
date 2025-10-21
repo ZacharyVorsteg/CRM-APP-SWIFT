@@ -1,0 +1,81 @@
+=== AI AGENT PROMPT FOR APP STORE CONNECT SETUP ===
+
+CONTEXT:
+I'm uploading an iOS app called "Trusenda CRM" to TestFlight for internal testing. I need you to create the app entry in Apple App Store Connect. I will log into the browser first.
+
+CRITICAL INFORMATION:
+- App Name: TrusendaCRM
+- Bundle ID: com.trusenda.crm
+- SKU: trusenda-001
+- Purpose: TestFlight internal testing (NOT public App Store yet)
+
+INSTRUCTIONS:
+
+Step 1: Navigate to App Store Connect
+- Go to: https://appstoreconnect.apple.com
+- Wait for me to log in with my Apple ID
+- Confirm you're on the "Apps" page
+
+Step 2: Create New App
+- Click the blue "+" button (usually top-left near "My Apps")
+- In the dropdown, select "New App"
+- A form will appear
+
+Step 3: Fill in ONLY These Required Fields
+Platform:
+- Check the checkbox for "iOS"
+- Do NOT check any other platforms
+
+Name:
+- Enter exactly: TrusendaCRM
+- (Note: This is just internal name for TestFlight, can change later)
+
+Primary Language:
+- Select: English (U.S.)
+
+Bundle ID:
+- This is a dropdown/search field
+- Type: com.trusenda.crm
+- Select it from the list (it should appear if already registered)
+- If it says "Xcode iOS App" next to it, that's correct
+
+SKU:
+- Enter: trusenda-001
+- (This is just internal reference number)
+
+User Access:
+- Leave as: Full Access
+- (Default is usually correct)
+
+Step 4: Create the App
+- Click the blue "Create" button at the bottom
+- Wait for confirmation page
+- You should see "TrusendaCRM" appear in your apps list
+
+Step 5: Verify Creation
+- Confirm you're now on the app's page
+- You should see tabs like "App Store", "TestFlight", etc.
+- Click the "TestFlight" tab to confirm it's accessible
+
+Step 6: Stop Here
+- DO NOT fill in any other information
+- DO NOT add screenshots
+- DO NOT write descriptions
+- DO NOT set pricing
+- We only needed the app slot created
+
+Confirmation: Tell me when the app is created and you're on the TestFlight tab.
+
+IMPORTANT NOTES:
+- If Bundle ID doesn't appear in dropdown, it needs to be registered first at developer.apple.com
+- If app name is taken, try: "Trusenda - CRM" or "Trusenda Real Estate CRM"
+- We're creating this for TestFlight testing ONLY, not public release yet
+
+=== END PROMPT ===
+
+NOTES FOR YOU:
+- Copy everything above this line
+- Give to AI agent after logging into appstoreconnect.apple.com
+- Agent will create the app entry
+- Then you come back to Xcode to upload the build
+

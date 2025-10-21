@@ -13,49 +13,128 @@ class AuthManager: ObservableObject {
     private let client = APIClient.shared
     
     private init() {
-        // Check if user has valid token on init
-        if keychain.get(.accessToken) != nil && !keychain.isTokenExpired() {
-            isAuthenticated = true
+        // Don't auto-authenticate on init - let checkAuthStatus handle it
+        // This prevents auto-login before user sees login screen
+        isAuthenticated = false
+    }
+    
+    // MARK: - Biometric Login
+    func loginWithBiometrics() async throws {
+        // Get stored credentials
+        guard let credentials = keychain.getBiometricCredentials() else {
+            throw NetworkError.serverError(400, "No saved credentials for Face ID")
         }
+        
+        // Use stored credentials to login
+        try await login(email: credentials.email, password: credentials.password, saveBiometric: false)
     }
     
     // MARK: - Login
-    func login(email: String, password: String) async throws {
-        let request = LoginRequest(username: email, password: password)
+    func login(email: String, password: String, saveBiometric: Bool = false) async throws {
+        // Use Netlify Identity token endpoint (GoTrue API)
+        // This matches what netlify-identity-widget uses in the web app
+        guard let url = URL(string: "https://trusenda.com/.netlify/identity/token") else {
+            throw NetworkError.invalidURL
+        }
         
-        let response: AuthToken = try await client.post(
-            endpoint: .login,
-            body: request,
-            requiresAuth: false
-        )
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30 // 30 second timeout
+        // IMPORTANT: Netlify Identity requires form-encoded, not JSON
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        // Save tokens to keychain
+        // URL-encode the body (form format)
+        let bodyString = "grant_type=password&username=\(email.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&password=\(password.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        request.httpBody = bodyString.data(using: .utf8)
+        
+        print("🌐 Attempting login to: \(url.absoluteString)")
+        print("📧 Email: \(email)")
+        print("📱 Network request details:")
+        print("   - Method: POST")
+        print("   - Content-Type: application/x-www-form-urlencoded")
+        print("   - Timeout: 30s")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        print("✅ Network response received")
+        print("📥 Response size: \(data.count) bytes")
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ Invalid response type")
+            throw NetworkError.unknown
+        }
+        
+        print("📊 HTTP Status: \(httpResponse.statusCode)")
+        
+        // Check for errors
+        if httpResponse.statusCode != 200 {
+            let errorText = String(data: data, encoding: .utf8) ?? "Login failed"
+            print("❌ Login error (\(httpResponse.statusCode)):", errorText)
+            
+            // Better error messages
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 400 {
+                throw NetworkError.serverError(httpResponse.statusCode, "Invalid email or password")
+            } else if httpResponse.statusCode >= 500 {
+                throw NetworkError.serverError(httpResponse.statusCode, "Server error. Please try again.")
+            } else {
+                throw NetworkError.serverError(httpResponse.statusCode, errorText)
+            }
+        }
+        
+        // Parse token response (matches AuthToken model)
+        let tokenResponse = try JSONDecoder().decode(AuthToken.self, from: data)
+        
+        print("✅ Login successful! Token expires in \(tokenResponse.expiresIn) seconds")
+        
+        // Save tokens to keychain (same as web app stores in localStorage)
         keychain.saveTokens(
-            accessToken: response.accessToken,
-            refreshToken: response.refreshToken,
-            expiresIn: response.expiresIn
+            accessToken: tokenResponse.accessToken,
+            refreshToken: tokenResponse.refreshToken,
+            expiresIn: tokenResponse.expiresIn
         )
         
-        // Fetch user info
+        // Fetch user info from backend (same as web app's API.me())
         try await fetchMe()
+        
+        // Save credentials for biometric login if requested
+        if saveBiometric {
+            keychain.saveBiometricCredentials(email: email, password: password)
+        }
         
         isAuthenticated = true
     }
     
     // MARK: - Signup
     func signup(email: String, password: String) async throws {
-        let request = SignupRequest(email: email, password: password)
+        guard let url = URL(string: "https://trusenda.com/.netlify/identity/signup") else {
+            throw NetworkError.invalidURL
+        }
         
-        // Netlify Identity signup endpoint
-        // Note: In production, this requires email confirmation
-        let _: SuccessResponse = try await client.post(
-            endpoint: .signup,
-            body: request,
-            requiresAuth: false
-        )
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // After signup, user needs to confirm email
-        // For now, we'll require manual login after signup
+        let body = ["email": email, "password": password]
+        request.httpBody = try JSONEncoder().encode(body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.unknown
+        }
+        
+        if httpResponse.statusCode != 200 {
+            let errorText = String(data: data, encoding: .utf8) ?? "Signup failed"
+            throw NetworkError.serverError(httpResponse.statusCode, errorText)
+        }
+        
+        print("✅ Signup successful! Account created.")
+        
+        // Auto-login after successful signup (premium UX)
+        try await login(email: email, password: password)
+        
+        // Mark as new user to show welcome tour
+        UserDefaults.standard.set(true, forKey: "isNewUser")
     }
     
     // MARK: - Logout
@@ -79,13 +158,22 @@ class AuthManager: ObservableObject {
     
     // MARK: - Get Valid Token
     func getValidToken() async throws -> String {
-        // Check if token is expired
-        if keychain.isTokenExpired() {
-            // Try to refresh
-            try await refreshToken()
+        // SECURITY DESIGN DECISION:
+        // This implementation intentionally does NOT auto-refresh tokens.
+        // Tokens expire after 1 hour, forcing fresh authentication for security.
+        // This is acceptable for a CRM app and reduces attack surface.
+        // Web app: Uses netlify-identity-widget which auto-refreshes
+        // iOS app: Requires re-login for enhanced security (similar to banking apps)
+        
+        // Check if we have a valid token
+        guard let token = keychain.get(.accessToken) else {
+            throw NetworkError.unauthorized
         }
         
-        guard let token = keychain.get(.accessToken) else {
+        // Check if token is expired (with 5-minute buffer)
+        if keychain.isTokenExpired() {
+            // Token expired - force re-authentication
+            logout()
             throw NetworkError.unauthorized
         }
         
@@ -133,17 +221,26 @@ class AuthManager: ObservableObject {
     
     // MARK: - Check Auth on App Launch
     func checkAuthStatus() async {
-        guard keychain.get(.accessToken) != nil else {
+        // Check if we have a valid token from previous session
+        guard let token = keychain.get(.accessToken),
+              !keychain.isTokenExpired() else {
+            // No valid token - user needs to log in
             isAuthenticated = false
+            currentUser = nil
             return
         }
         
+        // We have a valid token - restore session
         do {
             try await fetchMe()
             isAuthenticated = true
+            print("✅ Session restored - user still logged in")
         } catch {
-            // Token invalid, logout
-            logout()
+            // Token invalid or network error - force login
+            print("⚠️ Session restore failed - requiring login")
+            keychain.clearAll()
+            isAuthenticated = false
+            currentUser = nil
         }
     }
 }

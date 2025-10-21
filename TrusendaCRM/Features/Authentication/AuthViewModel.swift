@@ -11,14 +11,17 @@ class AuthViewModel: ObservableObject {
     private let authManager = AuthManager.shared
     
     // MARK: - Login
-    func login() async {
+    func login(enableBiometric: Bool = false) async {
         guard validate() else { return }
         
         isLoading = true
         error = nil
         
         do {
-            try await authManager.login(email: email, password: password)
+            try await authManager.login(email: email, password: password, saveBiometric: enableBiometric)
+            if enableBiometric {
+                print("✅ Face ID/Touch ID enabled for future logins")
+            }
         } catch {
             self.error = error.localizedDescription
         }
@@ -34,11 +37,17 @@ class AuthViewModel: ObservableObject {
         error = nil
         
         do {
+            // Signup automatically logs user in
             try await authManager.signup(email: email, password: password)
-            // Show success message - user must confirm email
-            error = "Account created! Please check your email to confirm your account."
+            // Success! AuthManager handles auto-login and sets isNewUser flag
+            // User will be taken to main app with welcome tour
         } catch {
-            self.error = error.localizedDescription
+            // Show actual error from API
+            if let networkError = error as? NetworkError {
+                self.error = networkError.localizedDescription
+            } else {
+                self.error = "Signup failed. This email may already be registered."
+            }
         }
         
         isLoading = false

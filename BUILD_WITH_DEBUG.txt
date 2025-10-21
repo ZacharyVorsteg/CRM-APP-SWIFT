@@ -1,0 +1,48 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         🔍 DEBUG BUILD - Enhanced Logging Added                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+DIAGNOSTIC LOGGING ADDED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Status update start logging
+✅ API request body logging
+✅ Success/failure logging  
+✅ Error type and details logging
+
+BUILD NOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Product → Build (⌘+B)
+2. Product → Run (⌘+R)
+
+TEST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Go to Leads list
+2. Tap any status badge (e.g., "Cold")
+3. Select different status (e.g., "Hot")
+4. Watch CONSOLE OUTPUT for diagnostic info:
+   
+   Expected output:
+   🔄 Updating lead {id} from Cold to Hot
+   📤 PUT https://trusenda.com/.netlify/functions/customers/{id}
+   📦 Body: { "status": "Hot" }
+   ✅ Status updated successfully to Hot
+   
+   OR if error:
+   ❌ Status update failed: {error}
+   ❌ Error type: {type}
+   ❌ Error details: {details}
+
+WHAT TO LOOK FOR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Is API call being made? (see 📤 PUT message)
+2. What's in the request body? (see 📦 Body)
+3. What error occurs? (see ❌ messages)
+4. Is it 401 (auth), 400 (bad request), or decode error?
+
+This will help identify the root cause!
+
+Last Updated: October 17, 2025 8:51 AM PST

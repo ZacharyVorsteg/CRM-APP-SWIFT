@@ -21,6 +21,8 @@ class SettingsViewModel: ObservableObject {
             tenantInfo = try await client.get(endpoint: .tenantInfo)
         } catch {
             self.error = error.localizedDescription
+            print("❌ Error fetching tenant info:", error)
+            clearMessageAfterDelay()
         }
         
         isLoading = false
@@ -41,6 +43,32 @@ class SettingsViewModel: ObservableObject {
         
         successMessage = "✅ Branding updated"
         clearMessageAfterDelay()
+    }
+    
+    // MARK: - Update Timezone
+    func updateTimezone(_ timezone: String) async {
+        do {
+            let update = ["timezone": timezone]
+            let _: SuccessResponse = try await client.post(
+                endpoint: .updateTimezone,
+                body: update
+            )
+            
+            // Update local tenant info
+            if var info = tenantInfo {
+                info.timezone = timezone
+                tenantInfo = info
+            }
+            
+            successMessage = "✅ Timezone updated to \(timezone)"
+            clearMessageAfterDelay()
+            
+            print("✅ Timezone updated to \(timezone)")
+        } catch {
+            self.error = "Failed to update timezone"
+            print("❌ Error updating timezone:", error)
+            clearMessageAfterDelay()
+        }
     }
     
     // MARK: - Fetch Public Form
@@ -92,19 +120,100 @@ class SettingsViewModel: ObservableObject {
         clearMessageAfterDelay()
     }
     
-    // MARK: - Upgrade to Pro
+    // MARK: - Upgrade to Pro (Stripe Checkout)
     func createCheckoutSession() async throws -> String {
         struct CheckoutRequest: Codable {
-            let plan: String = "pro"
+            let plan: String
+            
+            init() {
+                self.plan = "pro"
+            }
         }
         
-        let response: StripeCheckoutResponse = try await client.post(
-            endpoint: .createCheckoutSession,
-            body: CheckoutRequest()
-        )
+        do {
+            print("🔵 Creating Stripe checkout session...")
+            
+            let response: StripeCheckoutResponse = try await client.post(
+                endpoint: .createCheckoutSession,
+                body: CheckoutRequest()
+            )
+            
+            print("✅ Stripe session created: \(response.sessionId)")
+            print("✅ Stripe checkout URL: \(response.url)")
+            
+            // Return the actual checkout URL (not just session ID)
+            return response.url
+            
+        } catch let error as NetworkError {
+            print("❌ Stripe checkout error: \(error.localizedDescription)")
+            
+            // User-friendly error messages
+            switch error {
+            case .unauthorized:
+                throw StripePaymentError.notAuthenticated
+            case .timeout:
+                throw StripePaymentError.timeout
+            case .serverError(let code, _):
+                if code == 404 {
+                    throw StripePaymentError.noStripeAccount
+                } else {
+                    throw StripePaymentError.serverError
+                }
+            default:
+                throw StripePaymentError.unknown(error.localizedDescription)
+            }
+        } catch {
+            print("❌ Unexpected checkout error: \(error)")
+            throw StripePaymentError.unknown(error.localizedDescription)
+        }
+    }
+    
+    // MARK: - Manage Subscription (Stripe Portal)
+    func createPortalSession() async throws -> String {
+        struct PortalResponse: Codable {
+            let url: String
+        }
         
-        // Return session ID for opening Stripe checkout
-        return response.sessionId
+        struct EmptyRequest: Codable {}
+        
+        do {
+            print("🔵 Creating Stripe portal session...")
+            
+            let response: PortalResponse = try await client.post(
+                endpoint: .createPortalSession,
+                body: EmptyRequest()
+            )
+            
+            print("✅ Portal session created: \(response.url)")
+            
+            return response.url
+            
+        } catch let error as NetworkError {
+            print("❌ Portal session error: \(error.localizedDescription)")
+            
+            // User-friendly error messages
+            switch error {
+            case .unauthorized:
+                throw StripePaymentError.notAuthenticated
+            case .timeout:
+                throw StripePaymentError.timeout
+            case .serverError(404, _):
+                throw StripePaymentError.noSubscription
+            case .serverError(_, _):
+                throw StripePaymentError.serverError
+            default:
+                throw StripePaymentError.unknown(error.localizedDescription)
+            }
+        } catch {
+            print("❌ Unexpected portal error: \(error)")
+            throw StripePaymentError.unknown(error.localizedDescription)
+        }
+    }
+    
+    // MARK: - Export Data
+    func exportData() async throws -> [Lead] {
+        let response: LeadsResponse = try await client.get(endpoint: .customers)
+        return response.customers
     }
     
     // MARK: - Delete Account
@@ -123,15 +232,43 @@ class SettingsViewModel: ObservableObject {
     }
     
     // MARK: - Helpers
-    private func clearMessageAfterDelay() {
-        Task {
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+    func clearMessageAfterDelay() {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)  // 2.5 seconds
             successMessage = nil
+            error = nil
         }
     }
     
     func clearError() {
         error = nil
+    }
+}
+
+// MARK: - Stripe Payment Error Types
+enum StripePaymentError: LocalizedError {
+    case notAuthenticated
+    case noStripeAccount
+    case noSubscription
+    case timeout
+    case serverError
+    case unknown(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:
+            return "Please log in to upgrade your plan"
+        case .noStripeAccount:
+            return "Unable to process payment. Please contact support@trusenda.com"
+        case .noSubscription:
+            return "No active subscription found. Please upgrade to Pro first."
+        case .timeout:
+            return "Request timed out. Please check your connection and try again."
+        case .serverError:
+            return "Payment service temporarily unavailable. Please try again in a few moments."
+        case .unknown(let message):
+            return "Error: \(message). Please contact support if this persists."
+        }
     }
 }
 

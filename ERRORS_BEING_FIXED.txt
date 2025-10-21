@@ -1,0 +1,7 @@
+Fixing 4 compilation errors:
+
+1. ✅ createLead arguments - Changed to use LeadCreatePayload
+2. ⏳ statusIcon not found - Adding to LeadRowView
+3. ⏳ statusIcon not found (2nd instance) - Adding to LeadRowView
+
+Status: Applying fixes...

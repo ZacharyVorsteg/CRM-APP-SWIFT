@@ -17,9 +17,16 @@ struct LeadActionResponse: Codable {
     let customer: Lead
 }
 
+/// Response from marking lead as contacted (includes status progression)
+struct ContactedResponse: Codable {
+    let success: Bool
+    let lead: Lead
+}
+
 /// Response from Stripe checkout session
 struct StripeCheckoutResponse: Codable {
     let sessionId: String
+    let url: String  // The actual Stripe checkout URL
 }
 
 /// Public form model

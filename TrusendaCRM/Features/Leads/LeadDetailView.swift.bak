@@ -1,0 +1,622 @@
+import SwiftUI
+
+struct LeadDetailView: View {
+    let lead: Lead
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var viewModel: LeadViewModel
+    @State private var showEditSheet = false
+    @State private var showFollowUpSheet = false
+    
+    // Get live lead data from viewModel
+    private var currentLead: Lead {
+        viewModel.leads.first(where: { $0.id == lead.id }) ?? lead
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Header Card - Premium Salesforce-style
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text(currentLead.name)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            // Status badge (larger for detail view)
+                            Text(currentLead.status)
+                                .font(.system(size: 13, weight: .bold))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(statusColor(currentLead.status).opacity(0.15))
+                                )
+                                .foregroundColor(statusColor(currentLead.status))
+                        }
+                        
+                        if let company = currentLead.company {
+                            HStack(spacing: 6) {
+                                Image(systemName: "building.2.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Text(company)
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.cardBackground)
+                            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    
+                    // Contact Info Card - Premium with tappable links
+                    if lead.email != nil || lead.phone != nil {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("CONTACT")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.secondary)
+                                .tracking(0.8)
+                            
+                            if let email = lead.email, !email.isEmpty {
+                                Link(destination: URL(string: "mailto:\(email)")!) {
+                                    HStack(spacing: 12) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.primaryBlue.opacity(0.1))
+                                                .frame(width: 36, height: 36)
+                                            Image(systemName: "envelope.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.primaryBlue)
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Email")
+                                                .font(.system(size: 11, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                            Text(email)
+                                                .font(.system(size: 15))
+                                                .foregroundColor(.primaryBlue)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.up.forward")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            
+                            if let phone = lead.phone, !phone.isEmpty {
+                                Link(destination: URL(string: "tel:\(phone.filter { $0.isNumber })")!) {
+                                    HStack(spacing: 12) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.successGreen.opacity(0.1))
+                                                .frame(width: 36, height: 36)
+                                            Image(systemName: "phone.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.successGreen)
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Phone")
+                                                .font(.system(size: 11, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                            Text(phone)
+                                                .font(.system(size: 15))
+                                                .foregroundColor(.successGreen)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.up.forward")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.cardBackground)
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 16)
+                    }
+                    
+                    // Property Details (matches web app table)
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("PROPERTY DETAILS")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.secondary)
+                            .tracking(0.8)
+                        
+                        VStack(spacing: 10) {
+                            if let propertyType = lead.propertyType {
+                                DetailRow(label: "Type", value: propertyType)
+                                Divider()
+                            }
+                            
+                            if let transactionType = lead.transactionType {
+                                DetailRow(label: "Transaction", value: transactionType)
+                                Divider()
+                            }
+                            
+                            if let budget = lead.budget, !budget.isEmpty {
+                                // Only add $ if budget doesn't already start with it
+                                let displayBudget = budget.hasPrefix("$") ? budget : "$\(budget)"
+                                DetailRow(label: "Budget", value: displayBudget)
+                                Divider()
+                            }
+                            
+                            if let timeline = lead.timelineStatus {
+                                DetailRow(label: "Timeline", value: timeline)
+                                Divider()
+                            }
+                            
+                            if let area = lead.preferredArea, !area.isEmpty {
+                                DetailRow(label: "Area", value: area)
+                                Divider()
+                            }
+                            
+                            if let industry = lead.industry, !industry.isEmpty {
+                                DetailRow(label: "Industry", value: industry)
+                                Divider()
+                            }
+                            
+                            if let leaseTerm = lead.leaseTerm, !leaseTerm.isEmpty {
+                                DetailRow(label: "Lease Term", value: leaseTerm)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.cardBackground)
+                            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                    )
+                    .padding(.horizontal, 16)
+                    
+                    // Follow-up Section (matches web app)
+                    if lead.followUpOn != nil {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("FOLLOW-UP")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.secondary)
+                                    .tracking(0.8)
+                                
+                                Spacer()
+                                
+                                if lead.isFollowUpDue {
+                                    Text("DUE")
+                                        .font(.caption.bold())
+                                        .foregroundColor(.orange)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(Color.orange.opacity(0.15))
+                                        .cornerRadius(6)
+                                }
+                            }
+                            
+                            if let followUpDate = lead.followUpDate {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "calendar")
+                                        .foregroundColor(lead.isFollowUpDue ? .orange : .blue)
+                                    Text(followUpDate.toDisplayString())
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(lead.isFollowUpDue ? .orange : .primary)
+                                }
+                            }
+                            
+                            if let notes = lead.followUpNotes, !notes.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Notes:")
+                                        .font(.caption.bold())
+                                        .foregroundColor(.secondary)
+                                    Text(notes)
+                                        .font(.subheadline)
+                                        .foregroundColor(.primary)
+                                }
+                                .padding(.top, 4)
+                            }
+                            
+                            Divider()
+                            
+                            // Quick actions
+                            HStack(spacing: 12) {
+                                Button {
+                                    showFollowUpSheet = true
+                                } label: {
+                                    Label("Reschedule", systemImage: "calendar.badge.plus")
+                                        .font(.system(size: 14, weight: .medium))
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.primaryBlue)
+                                
+                                Button {
+                                    Task {
+                                        do {
+                                            try await viewModel.markContacted(leadId: lead.id)
+                                            dismiss()
+                                        } catch {
+                                            print("Failed to mark contacted:", error)
+                                        }
+                                    }
+                                } label: {
+                                    Label("Mark Contacted", systemImage: "checkmark.circle.fill")
+                                        .font(.system(size: 14, weight: .medium))
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.successGreen)
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(lead.isFollowUpDue ? Color.orange.opacity(0.08) : Color.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(lead.isFollowUpDue ? Color.orange.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                                )
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 16)
+                    }
+                    
+                    // Notes
+                    if let notes = lead.notes, !notes.isEmpty {
+                        GroupBox("Notes") {
+                            Text(notes)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Metadata - Created Date (matches web app format)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("CREATED")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.secondary)
+                            .tracking(0.8)
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "calendar")
+                                .foregroundColor(.primaryBlue)
+                                .font(.system(size: 16))
+                            
+                            if let createdDate = lead.createdDate {
+                                Text(createdDate.toDisplayString())
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.primary)
+                            } else {
+                                // Fallback: Show raw string
+                                Text(lead.createdAt)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.cardBackground)
+                            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                    )
+                    .padding(.horizontal, 16)
+                }
+                .padding(.vertical)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .background(colorScheme == .dark ? Color.backgroundDark : Color.backgroundLight)
+            .tint(.primaryBlue)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.primaryBlue)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        // Haptic feedback
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                        showEditSheet = true
+                    } label: {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.primaryBlue)
+                    }
+                }
+            }
+            .sheet(isPresented: $showEditSheet) {
+                EditLeadView(lead: lead)
+                    .environmentObject(viewModel)
+            }
+            .sheet(isPresented: $showFollowUpSheet) {
+                FollowUpScheduleView(lead: lead)
+                    .environmentObject(viewModel)
+            }
+        }
+    }
+    
+    private func statusColor(_ status: String) -> Color {
+        switch status {
+        case "Cold": return .blue
+        case "Warm": return .orange
+        case "Hot": return .red
+        case "Closed": return .green
+        default: return .gray
+        }
+    }
+}
+
+struct DetailRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .fontWeight(.medium)
+        }
+    }
+}
+
+struct EditLeadView: View {
+    let lead: Lead
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var viewModel: LeadViewModel
+    
+    // ALL editable fields (matching AddLeadView)
+    @State private var name: String
+    @State private var email: String
+    @State private var phone: String
+    @State private var company: String
+    @State private var budget: String
+    @State private var sizeMin: String
+    @State private var sizeMax: String
+    @State private var propertyType: String
+    @State private var transactionType: String
+    @State private var status: String
+    @State private var preferredArea: String
+    @State private var industry: String
+    @State private var leaseTerm: String
+    @State private var notes: String
+    
+    // Options (matching cloud app exactly)
+    let propertyTypes = ["Warehouse", "Manufacturing", "Land", "Office", "Retail", "Mixed Use", "Industrial", "Flex", "Other"]
+    let transactionTypes = ["Lease", "Purchase", "Lease-Purchase", "Renewal/Expansion", "Other"]
+    let statuses = ["Cold", "Warm", "Hot", "Closed"]
+    let budgetOptions = ["Under $2,000/mo", "$2,000 - $5,000/mo", "$5,000 - $10,000/mo", "$10,000 - $20,000/mo", "$20,000 - $50,000/mo", "$50,000+/mo", "Custom"]
+    let industryOptions = ["Automotive & Transportation", "Construction & Contracting", "Distribution & Logistics", "E-commerce & Fulfillment", "Food & Beverage Production", "Healthcare & Medical", "Manufacturing", "Professional Services", "Retail Operations", "Technology & Software", "Warehousing & Storage", "Wholesale Trade", "Other"]
+    let leaseTermOptions = ["Month-to-Month", "3-6 Months", "1 Year", "2 Years", "3 Years", "5 Years", "7-10 Years", "10+ Years", "Flexible/TBD"]
+    
+    init(lead: Lead) {
+        self.lead = lead
+        _name = State(initialValue: lead.name)
+        _email = State(initialValue: lead.email ?? "")
+        _phone = State(initialValue: lead.phone ?? "")
+        _company = State(initialValue: lead.company ?? "")
+        _budget = State(initialValue: lead.budget ?? "")
+        _sizeMin = State(initialValue: lead.sizeMin ?? "")
+        _sizeMax = State(initialValue: lead.sizeMax ?? "")
+        _propertyType = State(initialValue: lead.propertyType ?? "")
+        _transactionType = State(initialValue: lead.transactionType ?? "Lease")
+        _status = State(initialValue: lead.status)
+        _preferredArea = State(initialValue: lead.preferredArea ?? "")
+        _industry = State(initialValue: lead.industry ?? "")
+        _leaseTerm = State(initialValue: lead.leaseTerm ?? "")
+        _notes = State(initialValue: lead.notes ?? "")
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("CONTACT INFORMATION") {
+                    TextField("Name *", text: $name)
+                    TextField("Email", text: $email)
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+                    TextField("Phone", text: $phone)
+                        .textContentType(.telephoneNumber)
+                        .keyboardType(.phonePad)
+                    TextField("Company", text: $company)
+                }
+                
+                Section("PROPERTY REQUIREMENTS") {
+                    Picker("Property Type", selection: $propertyType) {
+                        Text("Select Type").tag("")
+                        ForEach(propertyTypes, id: \.self) { type in
+                            Text(type).tag(type)
+                        }
+                    }
+                    
+                    Picker("Transaction Type", selection: $transactionType) {
+                        ForEach(transactionTypes, id: \.self) { type in
+                            Text(type).tag(type)
+                        }
+                    }
+                    
+                    Picker("Budget", selection: $budget) {
+                        Text("Select Budget").tag("")
+                        ForEach(budgetOptions, id: \.self) { option in
+                            Text(option).tag(option)
+                        }
+                    }
+                    
+                    TextField("Size Min (SF)", text: $sizeMin)
+                        .keyboardType(.numberPad)
+                    TextField("Size Max (SF)", text: $sizeMax)
+                        .keyboardType(.numberPad)
+                }
+                
+                Section("BUSINESS DETAILS") {
+                    TextField("Preferred Area", text: $preferredArea)
+                    
+                    Picker("Industry", selection: $industry) {
+                        Text("Select Industry").tag("")
+                        ForEach(industryOptions, id: \.self) { option in
+                            Text(option).tag(option)
+                        }
+                    }
+                    
+                    Picker("Lease Term", selection: $leaseTerm) {
+                        Text("Select Lease Term").tag("")
+                        ForEach(leaseTermOptions, id: \.self) { option in
+                            Text(option).tag(option)
+                        }
+                    }
+                }
+                
+                Section("STATUS & NOTES") {
+                    Picker("Status", selection: $status) {
+                        ForEach(statuses, id: \.self) { status in
+                            Text(status).tag(status)
+                        }
+                    }
+                    
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 100)
+                }
+            }
+            .navigationTitle("Edit Lead")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { 
+                        dismiss() 
+                    }
+                    .foregroundColor(.primaryBlue)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        Task {
+                            await saveLead()
+                        }
+                    }
+                    .foregroundColor(.primaryBlue)
+                    .fontWeight(.semibold)
+                    .disabled(name.isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func saveLead() async {
+        guard !name.isEmpty else { return }
+        
+        var updates = LeadUpdatePayload()
+        updates.name = name
+        updates.email = email.isEmpty ? nil : email
+        updates.phone = phone.isEmpty ? nil : phone
+        updates.company = company.isEmpty ? nil : company
+        updates.budget = budget.isEmpty ? nil : budget
+        updates.sizeMin = sizeMin.isEmpty ? nil : sizeMin
+        updates.sizeMax = sizeMax.isEmpty ? nil : sizeMax
+        updates.propertyType = propertyType.isEmpty ? nil : propertyType
+        updates.transactionType = transactionType.isEmpty ? nil : transactionType
+        updates.status = status
+        updates.preferredArea = preferredArea.isEmpty ? nil : preferredArea
+        updates.industry = industry.isEmpty ? nil : industry
+        updates.leaseTerm = leaseTerm.isEmpty ? nil : leaseTerm
+        updates.notes = notes.isEmpty ? nil : notes
+        
+        do {
+            try await viewModel.updateLead(id: lead.id, updates: updates)
+            
+            // Success haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            
+            withAnimation(.easeOut(duration: 0.3)) {
+                dismiss()
+            }
+        } catch {
+            print("Failed to update lead:", error)
+            
+            // Error haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+        }
+    }
+}
+
+struct FollowUpScheduleView: View {
+    let lead: Lead
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var viewModel: LeadViewModel
+    
+    @State private var followUpDate = Date()
+    @State private var followUpNotes = ""
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                DatePicker("Follow-up Date", selection: $followUpDate, in: Date()..., displayedComponents: .date)
+                
+                Section("Notes") {
+                    TextEditor(text: $followUpNotes)
+                        .frame(minHeight: 100)
+                }
+            }
+            .navigationTitle("Schedule Follow-Up")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        Task {
+                            await saveFollowUp()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func saveFollowUp() async {
+        var updates = LeadUpdatePayload()
+        updates.followUpOn = followUpDate.toISO8601String()
+        updates.followUpNotes = followUpNotes.isEmpty ? nil : followUpNotes
+        updates.needsAttention = false
+        
+        do {
+            try await viewModel.updateLead(id: lead.id, updates: updates)
+            
+            // Success haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                dismiss()
+            }
+        } catch {
+            print("Failed to schedule follow-up:", error)
+            
+            // Error haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+        }
+    }
+}
+
