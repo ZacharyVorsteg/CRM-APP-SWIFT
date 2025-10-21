@@ -305,12 +305,3 @@ struct ActivityRowView: View {
     }
 }
 
-// MARK: - Date Extensions
-extension Date {
-    func toRelativeString() -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: self, relativeTo: Date())
-    }
-}
-
