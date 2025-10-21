@@ -15,27 +15,8 @@ class PropertyViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let token = try KeychainManager.shared.getToken()
-            guard let url = URL(string: "\(Endpoints.baseURL)/properties") else {
-                throw NetworkError.invalidURL
-            }
-            
-            var request = URLRequest(url: url)
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw NetworkError.invalidResponse
-            }
-            
-            guard httpResponse.statusCode == 200 else {
-                print("❌ Properties fetch failed with status: \(httpResponse.statusCode)")
-                throw NetworkError.serverError(httpResponse.statusCode)
-            }
-            
-            let decoded = try JSONDecoder().decode(PropertiesResponse.self, from: data)
-            properties = decoded.properties
+            let response: PropertiesResponse = try await apiClient.get(endpoint: .properties)
+            properties = response.properties
             
             print("✅ Fetched \(properties.count) properties")
             
@@ -49,95 +30,41 @@ class PropertyViewModel: ObservableObject {
     
     // Add new property
     func addProperty(_ payload: PropertyCreatePayload) async throws {
-        let token = try KeychainManager.shared.getToken()
-        guard let url = URL(string: "\(Endpoints.baseURL)/properties") else {
-            throw NetworkError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(payload)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-        
-        guard httpResponse.statusCode == 200 else {
-            print("❌ Property creation failed with status: \(httpResponse.statusCode)")
-            throw NetworkError.serverError(httpResponse.statusCode)
-        }
-        
-        let decoded = try JSONDecoder().decode(PropertyCreateResponse.self, from: data)
+        let response: PropertyCreateResponse = try await apiClient.post(
+            endpoint: .properties,
+            body: payload
+        )
         
         // Add to local list
-        properties.insert(decoded.property, at: 0)
+        properties.insert(response.property, at: 0)
         
         // Store matches for notifications
-        if !decoded.matches.isEmpty {
-            print("🎯 Property matched with \(decoded.matches.count) leads")
+        if !response.matches.isEmpty {
+            print("🎯 Property matched with \(response.matches.count) leads")
             // Could trigger notifications here
         }
         
-        print("✅ Property added: \(decoded.property.title)")
+        print("✅ Property added: \(response.property.title)")
     }
     
     // Update property
     func updateProperty(id: String, updates: PropertyUpdatePayload) async throws {
-        let token = try KeychainManager.shared.getToken()
-        guard let url = URL(string: "\(Endpoints.baseURL)/properties/\(id)") else {
-            throw NetworkError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(updates)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-        
-        guard httpResponse.statusCode == 200 else {
-            throw NetworkError.serverError(httpResponse.statusCode)
-        }
-        
-        let decoded = try JSONDecoder().decode(PropertyResponse.self, from: data)
+        let response: PropertyResponse = try await apiClient.put(
+            endpoint: .property(id: id),
+            body: updates
+        )
         
         // Update local list
         if let index = properties.firstIndex(where: { $0.id == id }) {
-            properties[index] = decoded.property
+            properties[index] = response.property
         }
         
-        print("✅ Property updated: \(decoded.property.title)")
+        print("✅ Property updated: \(response.property.title)")
     }
     
     // Delete property
     func deleteProperty(id: String) async throws {
-        let token = try KeychainManager.shared.getToken()
-        guard let url = URL(string: "\(Endpoints.baseURL)/properties/\(id)") else {
-            throw NetworkError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        let (_, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-        
-        guard httpResponse.statusCode == 200 else {
-            throw NetworkError.serverError(httpResponse.statusCode)
-        }
+        try await apiClient.delete(endpoint: .property(id: id))
         
         // Remove from local list
         properties.removeAll { $0.id == id }

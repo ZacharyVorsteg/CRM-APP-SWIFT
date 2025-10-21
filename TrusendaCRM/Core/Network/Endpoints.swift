@@ -6,9 +6,10 @@ enum Endpoint {
     static let functionsBase = "\(baseURL)/.netlify/functions"
     static let identityBase = "\(baseURL)/.netlify/identity"
     
-    // Authentication
+    // Authentication (Netlify Identity GoTrue API)
     case login
-    case signup
+    case signup  
+    case recover
     case me
     
     // Leads (Customers)
@@ -23,6 +24,7 @@ enum Endpoint {
     // Stripe
     case createCheckoutSession
     case createPortalSession
+    case exportData
     
     // Public Forms
     case publicFormManage
@@ -38,12 +40,18 @@ enum Endpoint {
     case leadSnooze
     case leadMarkContacted
     
+    // Properties
+    case properties
+    case property(id: String)
+    
     var url: URL? {
         switch self {
         case .login:
             return URL(string: "\(Endpoint.identityBase)/token")
         case .signup:
             return URL(string: "\(Endpoint.identityBase)/signup")
+        case .recover:
+            return URL(string: "\(Endpoint.identityBase)/recover")
         case .me:
             return URL(string: "\(Endpoint.functionsBase)/me")
         case .customers:
@@ -60,6 +68,8 @@ enum Endpoint {
             return URL(string: "\(Endpoint.functionsBase)/create-checkout-session")
         case .createPortalSession:
             return URL(string: "\(Endpoint.functionsBase)/create-portal-session")
+        case .exportData:
+            return URL(string: "\(Endpoint.functionsBase)/customers")
         case .publicFormManage:
             return URL(string: "\(Endpoint.functionsBase)/public-form-manage")
         case .apiKeys:
@@ -72,6 +82,10 @@ enum Endpoint {
             return URL(string: "\(Endpoint.functionsBase)/lead-snooze")
         case .leadMarkContacted:
             return URL(string: "\(Endpoint.functionsBase)/lead-mark-contacted")
+        case .properties:
+            return URL(string: "\(Endpoint.functionsBase)/properties")
+        case .property(let id):
+            return URL(string: "\(Endpoint.functionsBase)/properties/\(id)")
         }
     }
 }
