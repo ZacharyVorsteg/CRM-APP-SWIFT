@@ -93,6 +93,7 @@ struct ContentView: View {
 struct MainTabView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var leadViewModel = LeadViewModel()
+    @StateObject private var propertyViewModel = PropertyViewModel()
     @StateObject private var settingsViewModel = SettingsViewModel()
     
     var body: some View {
@@ -103,6 +104,13 @@ struct MainTabView: View {
                 }
                 .environmentObject(leadViewModel)
             
+            PropertiesListView()
+                .tabItem {
+                    Label("Properties", systemImage: "building.2.fill")
+                }
+                .environmentObject(propertyViewModel)
+                .environmentObject(leadViewModel)
+            
             FollowUpListView()
                 .tabItem {
                     Label("Follow-Ups", systemImage: "calendar.badge.clock")
@@ -110,15 +118,11 @@ struct MainTabView: View {
                 .environmentObject(leadViewModel)
                 .badge(leadViewModel.followUpCount)
             
-            // Activity tab temporarily commented until file is added to Xcode project
-            // Uncomment after: Right-click TrusendaCRM folder → Add Files → Select RecentActivityView.swift
-            /*
             RecentActivityView()
                 .tabItem {
                     Label("Activity", systemImage: "clock.arrow.circlepath")
                 }
                 .environmentObject(leadViewModel)
-            */
             
             SettingsView()
                 .tabItem {
@@ -131,10 +135,11 @@ struct MainTabView: View {
         .task {
             // Preload all data in parallel for instant tab switching
             async let leads: Void = leadViewModel.fetchLeads()
+            async let properties: Void = propertyViewModel.fetchProperties()
             async let tenantInfo: Void = settingsViewModel.fetchTenantInfo()
             async let publicForm: Void = settingsViewModel.fetchPublicForm()
             
-            _ = await (leads, tenantInfo, publicForm)
+            _ = await (leads, properties, tenantInfo, publicForm)
         }
         .onAppear {
             // Configure tab bar appearance

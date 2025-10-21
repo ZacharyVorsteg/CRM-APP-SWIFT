@@ -29,6 +29,11 @@
 		APP020 /* FollowUpListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE020 /* FollowUpListView.swift */; };
 		APP021 /* RecentActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE021 /* RecentActivityView.swift */; };
 		APP022 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE022 /* SettingsViewModel.swift */; };
+		PROPERTY001 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYMODEL /* Property.swift */; };
+		PROPERTY002 /* PropertyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYVM /* PropertyViewModel.swift */; };
+		PROPERTY003 /* PropertiesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYLIST /* PropertiesListView.swift */; };
+		PROPERTY004 /* AddPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYADD /* AddPropertyView.swift */; };
+		PROPERTY005 /* PropertyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYDETAIL /* PropertyDetailView.swift */; };
 		ASSETS001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ASSETSREF /* Assets.xcassets */; };
 		COLORTHEME001 /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = COLORTHEMEFILE /* Color+Theme.swift */; };
 		CONSTANTS001 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONSTANTSFILE /* AppConstants.swift */; };
@@ -73,6 +78,11 @@
 		FILE020 /* FollowUpListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpListView.swift; sourceTree = "<group>"; };
 		FILE021 /* RecentActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivityView.swift; sourceTree = "<group>"; };
 		FILE022 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		PROPERTYMODEL /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
+		PROPERTYVM /* PropertyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyViewModel.swift; sourceTree = "<group>"; };
+		PROPERTYLIST /* PropertiesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesListView.swift; sourceTree = "<group>"; };
+		PROPERTYADD /* AddPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPropertyView.swift; sourceTree = "<group>"; };
+		PROPERTYDETAIL /* PropertyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailView.swift; sourceTree = "<group>"; };
 		FULLLEGALFILE /* FullLegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullLegalDocumentView.swift; sourceTree = "<group>"; };
 		INFOPLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		LEGALDOCFILE /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
@@ -144,6 +154,7 @@
 			children = (
 				AUTHGROUP /* Authentication */,
 				LEADSGROUP /* Leads */,
+				PROPERTIESGROUP /* Properties */,
 				FOLLOWUPSGROUP /* FollowUps */,
 				ACTIVITYGROUP /* Activity */,
 				SETTINGSGROUP /* Settings */,
@@ -158,6 +169,17 @@
 				FILE021 /* RecentActivityView.swift */,
 			);
 			path = Activity;
+			sourceTree = "<group>";
+		};
+		PROPERTIESGROUP /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+				PROPERTYVM /* PropertyViewModel.swift */,
+				PROPERTYLIST /* PropertiesListView.swift */,
+				PROPERTYADD /* AddPropertyView.swift */,
+				PROPERTYDETAIL /* PropertyDetailView.swift */,
+			);
+			path = Properties;
 			sourceTree = "<group>";
 		};
 		FOLLOWUPSGROUP /* FollowUps */ = {
@@ -192,6 +214,7 @@
 			isa = PBXGroup;
 			children = (
 				FILE006 /* Lead.swift */,
+				PROPERTYMODEL /* Property.swift */,
 				FILE007 /* User.swift */,
 				FILE008 /* TenantInfo.swift */,
 				FILE009 /* APIResponses.swift */,
@@ -368,6 +391,11 @@
 				APP020 /* FollowUpListView.swift in Sources */,
 				APP021 /* RecentActivityView.swift in Sources */,
 				APP022 /* SettingsViewModel.swift in Sources */,
+				PROPERTY001 /* Property.swift in Sources */,
+				PROPERTY002 /* PropertyViewModel.swift in Sources */,
+				PROPERTY003 /* PropertiesListView.swift in Sources */,
+				PROPERTY004 /* AddPropertyView.swift in Sources */,
+				PROPERTY005 /* PropertyDetailView.swift in Sources */,
 				COLORTHEME001 /* Color+Theme.swift in Sources */,
 				SETTINGS001 /* SettingsView.swift in Sources */,
 				WELCOME001 /* WelcomeView.swift in Sources */,
