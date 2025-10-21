@@ -67,6 +67,37 @@ struct PropertiesListView: View {
     var body: some View {
         NavigationView {
             ZStack {
+                // Match notification badge
+                if let lastProperty = viewModel.properties.first,
+                   !viewModel.calculateMatches(for: lastProperty, with: leadViewModel.leads).isEmpty,
+                   !UserDefaults.standard.bool(forKey: "seen_property_\(lastProperty.id)") {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                selectedProperty = lastProperty
+                                UserDefaults.standard.set(true, forKey: "seen_property_\(lastProperty.id)")
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "bell.badge.fill")
+                                        .font(.title3)
+                                    Text("New Match!")
+                                        .font(.headline)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(Color.orange)
+                                .cornerRadius(20)
+                                .shadow(color: Color.orange.opacity(0.4), radius: 8, x: 0, y: 4)
+                            }
+                            .padding()
+                        }
+                        Spacer()
+                    }
+                    .zIndex(100)
+                }
+                
                 if filteredProperties.isEmpty && !viewModel.isLoading {
                     VStack(spacing: 24) {
                         ZStack {
@@ -251,7 +282,7 @@ struct PropertiesListView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
                     Task {
-                        await deleteSelected Properties()
+                        await deleteSelectedProperties()
                     }
                 }
             } message: {

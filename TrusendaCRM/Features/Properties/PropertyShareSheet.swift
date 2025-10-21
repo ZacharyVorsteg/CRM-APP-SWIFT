@@ -4,6 +4,7 @@ struct PropertyShareSheet: View {
     let property: Property
     let matches: [LeadPropertyMatch]
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedLead: Lead?
     
     private var shareText: String {
         var text = "🏢 Property Listing\n\n"
@@ -87,6 +88,50 @@ struct PropertyShareSheet: View {
                     .padding()
                 }
                 
+                // Matched Leads - Share Directly
+                if !matches.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Send Directly To:")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .padding(.horizontal)
+                        
+                        ForEach(matches.prefix(5)) { match in
+                            Button {
+                                selectedLead = match.lead
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(match.lead.name)
+                                            .font(.subheadline.bold())
+                                            .foregroundColor(.primary)
+                                        if let company = match.lead.company {
+                                            Text(company)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Text("\(match.matchScore)%")
+                                        .font(.caption.bold())
+                                        .foregroundColor(.successGreen)
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                                .background(Color.primaryBlue.opacity(0.05))
+                                .cornerRadius(10)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                
                 // Share buttons
                 VStack(spacing: 12) {
                     ShareLink(item: shareText) {
@@ -127,6 +172,10 @@ struct PropertyShareSheet: View {
                 }
                 .padding()
             }
+            .sheet(item: $selectedLead) { lead in
+                LeadShareActionSheet(lead: lead, propertyText: shareText)
+            }
+            }
             .navigationTitle("Share Property")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -155,4 +204,121 @@ struct PropertyShareSheet: View {
         generator.notificationOccurred(.success)
     }
 }
+
+// MARK: - Lead Share Action Sheet
+struct LeadShareActionSheet: View {
+    let lead: Lead
+    let propertyText: String
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Lead info header
+                VStack(spacing: 8) {
+                    Text(lead.name)
+                        .font(.title2.bold())
+                    if let company = lead.company {
+                        Text(company)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding()
+                
+                // Share options
+                VStack(spacing: 16) {
+                    // Text message (if phone exists)
+                    if let phone = lead.phone, !phone.isEmpty {
+                        Button {
+                            sendSMS(to: phone)
+                        } label: {
+                            HStack {
+                                Image(systemName: "message.fill")
+                                    .font(.title3)
+                                Text("Send Text Message")
+                                Spacer()
+                                Text(phone)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color.successGreen.opacity(0.1))
+                            .foregroundColor(.successGreen)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
+                    // Email (if email exists)
+                    if let email = lead.email, !email.isEmpty {
+                        Button {
+                            sendEmail(to: email)
+                        } label: {
+                            HStack {
+                                Image(systemName: "envelope.fill")
+                                    .font(.title3)
+                                Text("Send Email")
+                                Spacer()
+                                Text(email)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color.primaryBlue.opacity(0.1))
+                            .foregroundColor(.primaryBlue)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
+                    // General share
+                    ShareLink(item: propertyText) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title3)
+                            Text("Share via Other App")
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .foregroundColor(.primary)
+                        .cornerRadius(12)
+                    }
+                }
+                .padding()
+                
+                Spacer()
+            }
+            .navigationTitle("Send To \(lead.name)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.primaryBlue)
+                }
+            }
+        }
+    }
+    
+    private func sendSMS(to phone: String) {
+        let cleanPhone = phone.filter { $0.isNumber }
+        let urlString = "sms:\(cleanPhone)&body=\(propertyText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func sendEmail(to email: String) {
+        let subject = "Property Listing - Might Be a Good Fit"
+        let body = propertyText
+        let urlString = "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
+        }
+    }
+}
+
 
