@@ -110,11 +110,15 @@ struct MainTabView: View {
                 .environmentObject(leadViewModel)
                 .badge(leadViewModel.followUpCount)
             
+            // Activity tab temporarily commented until file is added to Xcode project
+            // Uncomment after: Right-click TrusendaCRM folder → Add Files → Select RecentActivityView.swift
+            /*
             RecentActivityView()
                 .tabItem {
                     Label("Activity", systemImage: "clock.arrow.circlepath")
                 }
                 .environmentObject(leadViewModel)
+            */
             
             SettingsView()
                 .tabItem {
