@@ -9,6 +9,7 @@ struct PropertyDetailView: View {
     @State private var showEditSheet = false
     @State private var showMatchesSheet = false
     @State private var showDeleteAlert = false
+    @State private var showShareSheet = false
     @State private var matches: [LeadPropertyMatch] = []
     
     var body: some View {
@@ -261,14 +262,42 @@ struct PropertyDetailView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showEditSheet = true
+                    Menu {
+                        Button {
+                            showEditSheet = true
+                        } label: {
+                            Label("Edit Property", systemImage: "pencil")
+                        }
+                        
+                        Button {
+                            showShareSheet = true
+                        } label: {
+                            Label("Share Property", systemImage: "square.and.arrow.up")
+                        }
+                        
+                        Divider()
+                        
+                        Button(role: .destructive) {
+                            showDeleteAlert = true
+                        } label: {
+                            Label("Delete Property", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "pencil.circle.fill")
+                        Image(systemName: "ellipsis.circle.fill")
                             .font(.title3)
                             .foregroundColor(.primaryBlue)
                     }
                 }
+            }
+            .alert("Delete Property?", isPresented: $showDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deleteProperty()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete \"\(property.title)\"? This cannot be undone.")
             }
             .sheet(isPresented: $showEditSheet) {
                 EditPropertyView(property: property)
@@ -277,11 +306,32 @@ struct PropertyDetailView: View {
             .sheet(isPresented: $showMatchesSheet) {
                 PropertyMatchesSheet(matches: matches)
             }
+            .sheet(isPresented: $showShareSheet) {
+                PropertyShareSheet(property: property, matches: matches)
+            }
             .onAppear {
                 // Calculate matches on appear
                 matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
                 print("🎯 Calculated \(matches.count) matches for \(property.title)")
             }
+        }
+    }
+    
+    private func deleteProperty() async {
+        do {
+            try await viewModel.deleteProperty(id: property.id)
+            
+            // Success haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            
+            dismiss()
+        } catch {
+            print("❌ Failed to delete property:", error)
+            
+            // Error haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
         }
     }
     
