@@ -140,9 +140,6 @@ struct PropertiesListView: View {
                 PropertyMatchesSheet(matches: currentMatches)
                     .presentationDetents([.medium, .large])
             }
-            .task {
-                await viewModel.fetchProperties()
-            }
         }
     }
 }
