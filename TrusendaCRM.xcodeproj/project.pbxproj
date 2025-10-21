@@ -34,6 +34,7 @@
 		PROPERTY003 /* PropertiesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYLIST /* PropertiesListView.swift */; };
 		PROPERTY004 /* AddPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYADD /* AddPropertyView.swift */; };
 		PROPERTY005 /* PropertyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYDETAIL /* PropertyDetailView.swift */; };
+		PROPERTY006 /* EditPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYEDIT /* EditPropertyView.swift */; };
 		ASSETS001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ASSETSREF /* Assets.xcassets */; };
 		COLORTHEME001 /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = COLORTHEMEFILE /* Color+Theme.swift */; };
 		CONSTANTS001 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONSTANTSFILE /* AppConstants.swift */; };
@@ -83,6 +84,7 @@
 		PROPERTYLIST /* PropertiesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesListView.swift; sourceTree = "<group>"; };
 		PROPERTYADD /* AddPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPropertyView.swift; sourceTree = "<group>"; };
 		PROPERTYDETAIL /* PropertyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailView.swift; sourceTree = "<group>"; };
+		PROPERTYEDIT /* EditPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPropertyView.swift; sourceTree = "<group>"; };
 		FULLLEGALFILE /* FullLegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullLegalDocumentView.swift; sourceTree = "<group>"; };
 		INFOPLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		LEGALDOCFILE /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
@@ -177,6 +179,7 @@
 				PROPERTYVM /* PropertyViewModel.swift */,
 				PROPERTYLIST /* PropertiesListView.swift */,
 				PROPERTYADD /* AddPropertyView.swift */,
+				PROPERTYEDIT /* EditPropertyView.swift */,
 				PROPERTYDETAIL /* PropertyDetailView.swift */,
 			);
 			path = Properties;
@@ -396,6 +399,7 @@
 				PROPERTY003 /* PropertiesListView.swift in Sources */,
 				PROPERTY004 /* AddPropertyView.swift in Sources */,
 				PROPERTY005 /* PropertyDetailView.swift in Sources */,
+				PROPERTY006 /* EditPropertyView.swift in Sources */,
 				COLORTHEME001 /* Color+Theme.swift in Sources */,
 				SETTINGS001 /* SettingsView.swift in Sources */,
 				WELCOME001 /* WelcomeView.swift in Sources */,
