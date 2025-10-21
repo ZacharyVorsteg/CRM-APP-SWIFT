@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PropertiesListView: View {
-    @StateObject private var viewModel = PropertyViewModel()
+    @EnvironmentObject var viewModel: PropertyViewModel
     @EnvironmentObject var leadViewModel: LeadViewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showAddProperty = false
