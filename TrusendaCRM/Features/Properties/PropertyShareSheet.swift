@@ -6,58 +6,35 @@ struct PropertyShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedLead: Lead?
     
+    // Generate shareable URL
+    private var propertyURL: String {
+        return "https://trusenda.com/property/\(property.id)"
+    }
+    
+    // Share message for leads
     private var shareText: String {
-        var text = "🏢 Property Listing\n\n"
+        var text = "🏢 Check out this property that might be perfect for you:\n\n"
         text += "\(property.title)\n"
         
         if let address = property.address {
-            text += "\(address)\n"
+            text += "📍 \(address)"
+            if let city = property.city, let state = property.state {
+                text += ", \(city), \(state)"
+            }
+            text += "\n\n"
         }
-        if let city = property.city, let state = property.state {
-            text += "\(city), \(state) \(property.zipCode ?? "")\n"
-        }
-        
-        text += "\n📋 Details:\n"
         
         if let propertyType = property.propertyType {
-            text += "• Type: \(propertyType)\n"
-        }
-        if let transactionType = property.transactionType {
-            text += "• Transaction: \(transactionType)\n"
+            text += "Type: \(propertyType)\n"
         }
         if let sizeMin = property.sizeMin, let sizeMax = property.sizeMax {
-            text += "• Size: \(formatNumber(sizeMin)) - \(formatNumber(sizeMax)) SF\n"
+            text += "Size: \(formatNumber(sizeMin)) - \(formatNumber(sizeMax)) SF\n"
         }
         if let budget = property.budget {
-            text += "• Price: \(budget)\n"
-        }
-        if let leaseTerm = property.leaseTerm {
-            text += "• Lease Term: \(leaseTerm)\n"
-        }
-        if let industry = property.industry {
-            text += "• Best For: \(industry)\n"
+            text += "Price: \(budget)\n"
         }
         
-        if let description = property.description {
-            text += "\n📝 Description:\n\(description)\n"
-        }
-        
-        if let features = property.features {
-            text += "\n✨ Key Features:\n\(features)\n"
-        }
-        
-        if !matches.isEmpty {
-            text += "\n🎯 Matched Leads (\(matches.count)):\n"
-            for match in matches.prefix(3) {
-                text += "• \(match.lead.name)"
-                if let company = match.lead.company {
-                    text += " - \(company)"
-                }
-                text += " (\(match.matchScore)% match)\n"
-            }
-        }
-        
-        text += "\n✅ Status: \(property.status)"
+        text += "\n👀 View full details with photos:\n\(propertyURL)\n"
         
         return text
     }
@@ -121,10 +98,11 @@ struct PropertyShareSheet: View {
                 }
                 
                 VStack(spacing: 12) {
-                    ShareLink(item: shareText) {
+                    // Share URL button
+                    ShareLink(item: propertyURL) {
                         HStack {
-                            Image(systemName: "square.and.arrow.up")
-                            Text("Share via...")
+                            Image(systemName: "link.circle.fill")
+                            Text("Share Property Link")
                         }
                         .font(.headline)
                         .foregroundColor(.white)
@@ -140,12 +118,13 @@ struct PropertyShareSheet: View {
                         .cornerRadius(12)
                     }
                     
+                    // Copy URL button
                     Button {
                         copyToClipboard()
                     } label: {
                         HStack {
                             Image(systemName: "doc.on.doc")
-                            Text("Copy to Clipboard")
+                            Text("Copy Link")
                         }
                         .font(.headline)
                         .foregroundColor(.primaryBlue)
@@ -156,6 +135,13 @@ struct PropertyShareSheet: View {
                                 .fill(Color.primaryBlue.opacity(0.1))
                         )
                     }
+                    
+                    // URL Preview
+                    Text(propertyURL)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                        .padding(.top, 4)
                 }
                 .padding()
             }
@@ -183,7 +169,7 @@ struct PropertyShareSheet: View {
     }
     
     private func copyToClipboard() {
-        UIPasteboard.general.string = shareText
+        UIPasteboard.general.string = propertyURL
         
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
