@@ -24,6 +24,11 @@ struct PropertyShareSheet: View {
         return "https://trusenda.com/property/\(sanitizedPropertyID)"
     }
     
+    // Generate tracked URL for specific lead
+    private func trackedURL(for lead: Lead) -> String {
+        return "https://trusenda.com/property/\(sanitizedPropertyID)?leadId=\(lead.id)&leadName=\(lead.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")\(lead.email != nil ? "&leadEmail=\(lead.email!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.phone != nil ? "&leadPhone=\(lead.phone!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.company != nil ? "&leadCompany=\(lead.company!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")"
+    }
+    
     // Share message for leads
     private var shareText: String {
         var text = "🏢 Check out this property that might be perfect for you:\n\n"
@@ -173,7 +178,12 @@ struct PropertyShareSheet: View {
                 }
             }
             .sheet(item: $selectedLead) { lead in
-                LeadShareActionSheet(lead: lead, propertyText: shareText)
+                LeadShareActionSheet(
+                    lead: lead, 
+                    propertyText: shareText,
+                    propertyURL: propertyURL,
+                    trackedURL: trackedURL(for: lead)
+                )
             }
         }
     }
@@ -206,6 +216,8 @@ struct PropertyShareSheet: View {
 struct LeadShareActionSheet: View {
     let lead: Lead
     let propertyText: String
+    let propertyURL: String
+    let trackedURL: String
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -295,23 +307,34 @@ struct LeadShareActionSheet: View {
     
     private func sendSMS(to phone: String) {
         let cleanPhone = phone.filter { $0.isNumber }
-        let urlString = "sms:\(cleanPhone)&body=\(propertyText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        // Use tracked URL for SMS so we know who clicked
+        let message = propertyText.replacingOccurrences(of: propertyURL, with: trackedURL)
+        let urlString = "sms:\(cleanPhone)&body=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url)
             dismiss()
         }
+        
+        print("📱 Sending tracked SMS to \(lead.name)")
+        print("   Tracked URL:", trackedURL)
     }
     
     private func sendEmail(to email: String) {
         let subject = "Property Listing - Might Be a Good Fit"
-        let body = propertyText
+        
+        // Use tracked URL for email so we know who clicked
+        let body = propertyText.replacingOccurrences(of: propertyURL, with: trackedURL)
         let urlString = "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url)
             dismiss()
         }
+        
+        print("📧 Sending tracked email to \(lead.name)")
+        print("   Tracked URL:", trackedURL)
     }
 }
 
