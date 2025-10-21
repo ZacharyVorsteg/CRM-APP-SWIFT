@@ -65,7 +65,6 @@ struct PropertyShareSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                // Preview card
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Share Preview")
@@ -88,7 +87,6 @@ struct PropertyShareSheet: View {
                     .padding()
                 }
                 
-                // Matched Leads - Share Directly
                 if !matches.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Send Directly To:")
@@ -96,43 +94,32 @@ struct PropertyShareSheet: View {
                             .foregroundColor(.primary)
                             .padding(.horizontal)
                         
-                        ForEach(matches.prefix(5)) { match in
-                            Button {
-                                selectedLead = match.lead
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(match.lead.name)
-                                            .font(.subheadline.bold())
-                                            .foregroundColor(.primary)
-                                        if let company = match.lead.company {
-                                            Text(company)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(matches.prefix(5)) { match in
+                                    Button {
+                                        selectedLead = match.lead
+                                    } label: {
+                                        VStack(spacing: 6) {
+                                            Text(match.lead.name)
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.primary)
+                                            Text("\(match.matchScore)%")
+                                                .font(.caption.bold())
+                                                .foregroundColor(.successGreen)
                                         }
+                                        .padding()
+                                        .frame(width: 100)
+                                        .background(Color.primaryBlue.opacity(0.1))
+                                        .cornerRadius(10)
                                     }
-                                    
-                                    Spacer()
-                                    
-                                    Text("\(match.matchScore)%")
-                                        .font(.caption.bold())
-                                        .foregroundColor(.successGreen)
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
                                 }
-                                .padding()
-                                .background(Color.primaryBlue.opacity(0.05))
-                                .cornerRadius(10)
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal)
                         }
                     }
-                    .padding(.horizontal)
                 }
                 
-                // Share buttons
                 VStack(spacing: 12) {
                     ShareLink(item: shareText) {
                         HStack {
@@ -172,10 +159,6 @@ struct PropertyShareSheet: View {
                 }
                 .padding()
             }
-            .sheet(item: $selectedLead) { lead in
-                LeadShareActionSheet(lead: lead, propertyText: shareText)
-            }
-            }
             .navigationTitle("Share Property")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -185,6 +168,9 @@ struct PropertyShareSheet: View {
                     }
                     .foregroundColor(.primaryBlue)
                 }
+            }
+            .sheet(item: $selectedLead) { lead in
+                LeadShareActionSheet(lead: lead, propertyText: shareText)
             }
         }
     }
@@ -199,13 +185,11 @@ struct PropertyShareSheet: View {
     private func copyToClipboard() {
         UIPasteboard.general.string = shareText
         
-        // Success haptic
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
     }
 }
 
-// MARK: - Lead Share Action Sheet
 struct LeadShareActionSheet: View {
     let lead: Lead
     let propertyText: String
@@ -214,7 +198,6 @@ struct LeadShareActionSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                // Lead info header
                 VStack(spacing: 8) {
                     Text(lead.name)
                         .font(.title2.bold())
@@ -226,9 +209,7 @@ struct LeadShareActionSheet: View {
                 }
                 .padding()
                 
-                // Share options
                 VStack(spacing: 16) {
-                    // Text message (if phone exists)
                     if let phone = lead.phone, !phone.isEmpty {
                         Button {
                             sendSMS(to: phone)
@@ -249,7 +230,6 @@ struct LeadShareActionSheet: View {
                         }
                     }
                     
-                    // Email (if email exists)
                     if let email = lead.email, !email.isEmpty {
                         Button {
                             sendEmail(to: email)
@@ -270,7 +250,6 @@ struct LeadShareActionSheet: View {
                         }
                     }
                     
-                    // General share
                     ShareLink(item: propertyText) {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
@@ -307,6 +286,7 @@ struct LeadShareActionSheet: View {
         
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url)
+            dismiss()
         }
     }
     
@@ -317,8 +297,8 @@ struct LeadShareActionSheet: View {
         
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url)
+            dismiss()
         }
     }
 }
-
 
