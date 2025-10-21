@@ -67,39 +67,58 @@ struct PropertiesListView: View {
     
     var body: some View {
         NavigationView {
-            mainContent
+            contentView
+        }
+    }
+    
+    private var contentView: some View {
+        mainContent
             .navigationTitle("Properties")
             .navigationBarTitleDisplayMode(.large)
             .background(colorScheme == .dark ? Color.backgroundDark : Color.backgroundLight)
             .tint(.primaryBlue)
             .toolbar { toolbarContent }
             .overlay(alignment: .bottom) { deleteOverlay }
-            .alert("Delete Properties?", isPresented: $showDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await deleteSelectedProperties()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to delete \(selectedProperties.count) property(ies)? This cannot be undone.")
+            .alert("Delete Properties?", isPresented: $showDeleteAlert, actions: alertActions, message: alertMessage)
+            .sheet(isPresented: $showAddProperty, content: addPropertySheet)
+            .sheet(item: $selectedProperty, content: propertyDetailSheet)
+            .sheet(isPresented: $showMatches, content: matchesSheet)
+    }
+    
+    @ViewBuilder
+    private func alertActions() -> some View {
+        Button("Cancel", role: .cancel) { }
+        Button("Delete", role: .destructive) {
+            Task {
+                await deleteSelectedProperties()
             }
-            .sheet(isPresented: $showAddProperty) {
-                AddPropertyView()
-                    .environmentObject(viewModel)
-            }
-            .sheet(item: $selectedProperty) { property in
-                PropertyDetailView(property: property)
-                    .environmentObject(viewModel)
-                    .environmentObject(leadViewModel)
-            }
-            .sheet(isPresented: $showMatches) {
-                if let property = matchesProperty {
-                    PropertyMatchesSheet(matches: currentMatches, property: property)
-                        .environmentObject(leadViewModel)
-                        .presentationDetents([.medium, .large])
-                }
-            }
+        }
+    }
+    
+    @ViewBuilder
+    private func alertMessage() -> some View {
+        Text("Are you sure you want to delete \(selectedProperties.count) property(ies)? This cannot be undone.")
+    }
+    
+    @ViewBuilder
+    private func addPropertySheet() -> some View {
+        AddPropertyView()
+            .environmentObject(viewModel)
+    }
+    
+    @ViewBuilder
+    private func propertyDetailSheet(property: Property) -> some View {
+        PropertyDetailView(property: property)
+            .environmentObject(viewModel)
+            .environmentObject(leadViewModel)
+    }
+    
+    @ViewBuilder
+    private func matchesSheet() -> some View {
+        if let property = matchesProperty {
+            PropertyMatchesSheet(matches: currentMatches, property: property)
+                .environmentObject(leadViewModel)
+                .presentationDetents([.medium, .large])
         }
     }
     
