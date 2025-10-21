@@ -126,8 +126,6 @@ struct PropertiesListView: View {
     
     private var mainContent: some View {
         ZStack {
-            matchNotificationBadge
-            
             if filteredProperties.isEmpty && !viewModel.isLoading {
                 emptyStateView
             } else {
@@ -150,6 +148,8 @@ struct PropertiesListView: View {
                             gridWidth: geometry.size.width,
                             isSelected: selectedProperties.contains(property.id)
                         )
+                        .environmentObject(viewModel)
+                        .environmentObject(leadViewModel)
                         .onTapGesture {
                             handlePropertyTap(property)
                         }
@@ -254,38 +254,6 @@ struct PropertiesListView: View {
         }
     }
     
-    @ViewBuilder
-    private var matchNotificationBadge: some View {
-        if let lastProperty = viewModel.properties.first,
-           !viewModel.calculateMatches(for: lastProperty, with: leadViewModel.leads).isEmpty,
-           !UserDefaults.standard.bool(forKey: "seen_property_\(lastProperty.id)") {
-            VStack {
-                HStack {
-                    Spacer()
-                    Button {
-                        selectedProperty = lastProperty
-                        UserDefaults.standard.set(true, forKey: "seen_property_\(lastProperty.id)")
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "bell.badge.fill")
-                                .font(.title3)
-                            Text("New Match!")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color.orange)
-                        .cornerRadius(20)
-                        .shadow(color: Color.orange.opacity(0.4), radius: 8, x: 0, y: 4)
-                    }
-                    .padding()
-                }
-                Spacer()
-            }
-            .zIndex(100)
-        }
-    }
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
@@ -385,6 +353,8 @@ struct PropertyGridCell: View {
     let property: Property
     let gridWidth: CGFloat
     var isSelected: Bool = false
+    @EnvironmentObject var viewModel: PropertyViewModel
+    @EnvironmentObject var leadViewModel: LeadViewModel
     
     private var cellWidth: CGFloat {
         let spacing: CGFloat = 8
@@ -393,42 +363,41 @@ struct PropertyGridCell: View {
         return availableWidth / 3
     }
     
+    // Fixed uniform dimensions
+    private let imageHeight: CGFloat = 120
+    private let detailsHeight: CGFloat = 60
+    
+    var matchCount: Int {
+        viewModel.calculateMatches(for: property, with: leadViewModel.leads).count
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
+                // Image with fixed height
                 if let primaryImage = property.primaryImage, !primaryImage.isEmpty {
-                    // Display base64 encoded image
                     if let imageData = loadBase64Image(primaryImage) {
                         Image(uiImage: imageData)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: cellWidth, height: cellWidth)
+                            .frame(width: cellWidth, height: imageHeight)
                             .clipped()
                     } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(width: cellWidth, height: cellWidth)
+                        placeholderImage
                     }
                 } else {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.primaryBlue.opacity(0.15), Color.successGreen.opacity(0.2)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: cellWidth, height: cellWidth)
-                        .overlay(
-                            Image(systemName: propertyTypeIcon)
-                                .font(.system(size: 40, weight: .light))
-                                .foregroundColor(.primaryBlue.opacity(0.6))
-                        )
+                    placeholderImage
                 }
                 
+                // Overlays
                 VStack {
                     HStack {
+                        // Status Toggle Button (top left)
+                        statusToggleButton
+                        
                         Spacer()
+                        
+                        // Status Badge (top right)
                         Text(property.status)
                             .font(.system(size: 9, weight: .bold))
                             .padding(.horizontal, 8)
@@ -440,12 +409,35 @@ struct PropertyGridCell: View {
                             .foregroundColor(.white)
                             .padding(6)
                     }
+                    
                     Spacer()
+                    
+                    // Match Badge (bottom right) - only if matches exist
+                    if matchCount > 0 {
+                        HStack {
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Image(systemName: "person.2.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("\(matchCount)")
+                                    .font(.system(size: 11, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(Color.orange)
+                            )
+                            .padding(6)
+                        }
+                    }
                 }
             }
-            .frame(width: cellWidth, height: cellWidth)
+            .frame(width: cellWidth, height: imageHeight)
             .clipped()
             
+            // Details section with fixed height
             VStack(alignment: .leading, spacing: 2) {
                 Text(property.title)
                     .font(.system(size: 11, weight: .semibold))
@@ -468,9 +460,10 @@ struct PropertyGridCell: View {
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(width: cellWidth, height: detailsHeight, alignment: .topLeading)
             .background(Color.cardBackground.opacity(0.95))
         }
+        .frame(width: cellWidth, height: imageHeight + detailsHeight)
         .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
@@ -495,6 +488,58 @@ struct PropertyGridCell: View {
                 }
             }
         )
+    }
+    
+    private var placeholderImage: some View {
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [Color.primaryBlue.opacity(0.15), Color.successGreen.opacity(0.2)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: cellWidth, height: imageHeight)
+            .overlay(
+                Image(systemName: propertyTypeIcon)
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundColor(.primaryBlue.opacity(0.6))
+            )
+    }
+    
+    private var statusToggleButton: some View {
+        Button {
+            toggleStatus()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Color.black.opacity(0.6))
+                    .frame(width: 32, height: 32)
+                
+                Image(systemName: property.status == "Available" ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(statusColor)
+            }
+        }
+        .padding(6)
+    }
+    
+    private func toggleStatus() {
+        Task {
+            let newStatus = property.status == "Available" ? "Unavailable" : "Available"
+            
+            // Create updated property
+            var updatedProperty = property
+            updatedProperty.status = newStatus
+            
+            // Update in view model
+            do {
+                try await viewModel.updateProperty(updatedProperty)
+                print("✅ Property status toggled to: \(newStatus)")
+            } catch {
+                print("❌ Failed to toggle property status:", error)
+            }
+        }
     }
     
     private var propertyTypeIcon: String {
