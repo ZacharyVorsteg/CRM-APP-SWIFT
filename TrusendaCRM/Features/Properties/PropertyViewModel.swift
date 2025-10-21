@@ -16,16 +16,24 @@ class PropertyViewModel: ObservableObject {
         
         do {
             let response: PropertiesResponse = try await apiClient.get(endpoint: .properties)
-            properties = response.properties
             
-            print("✅ Fetched \(properties.count) properties")
+            // Force main thread update
+            await MainActor.run {
+                properties = response.properties
+                print("✅ Fetched \(properties.count) properties")
+                print("   Properties: \(properties.map { $0.title }.joined(separator: ", "))")
+            }
             
         } catch {
             print("❌ Error fetching properties:", error)
-            errorMessage = error.localizedDescription
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+            }
         }
         
-        isLoading = false
+        await MainActor.run {
+            isLoading = false
+        }
     }
     
     // Add new property

@@ -63,6 +63,25 @@ struct PropertyDetailView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     
+                    // Photo Gallery (if images exist)
+                    if let images = property.images, !images.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(Array(images.enumerated()), id: \.offset) { index, imageString in
+                                    if let image = loadBase64Image(imageString) {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 300, height: 200)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                    }
+                    
                     // Property Details Card
                     VStack(alignment: .leading, spacing: 14) {
                         Text("PROPERTY DETAILS")
@@ -71,7 +90,7 @@ struct PropertyDetailView: View {
                             .tracking(0.8)
                         
                         VStack(spacing: 10) {
-                            if let propertyType = property.propertyType {
+                            if let propertyType = property.propertyType, !propertyType.isEmpty {
                                 DetailRow(label: "Type", value: propertyType, icon: "building.2")
                                 Divider()
                             }
@@ -281,6 +300,22 @@ struct PropertyDetailView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: number)) ?? value
+    }
+    
+    // Load base64 encoded image
+    private func loadBase64Image(_ base64String: String) -> UIImage? {
+        var imageString = base64String
+        if imageString.hasPrefix("data:image") {
+            if let commaRange = imageString.range(of: ",") {
+                imageString = String(imageString[commaRange.upperBound...])
+            }
+        }
+        
+        guard let imageData = Data(base64Encoded: imageString, options: .ignoreUnknownCharacters) else {
+            return nil
+        }
+        
+        return UIImage(data: imageData)
     }
 }
 
