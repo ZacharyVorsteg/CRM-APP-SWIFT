@@ -8,6 +8,7 @@ struct PropertiesListView: View {
     @State private var selectedProperty: Property?
     @State private var showMatches = false
     @State private var currentMatches: [LeadPropertyMatch] = []
+    @State private var matchesProperty: Property?
     @State private var selectedFilter: PropertyFilter = .all
     @State private var selectionMode = false
     @State private var selectedProperties: Set<String> = []
@@ -66,134 +67,13 @@ struct PropertiesListView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                matchNotificationBadge
-                
-                if filteredProperties.isEmpty && !viewModel.isLoading {
-                    emptyStateView
-                } else {
-                    GeometryReader { geometry in
-                        ScrollView {
-                            LazyVGrid(columns: columns, spacing: 8) {
-                                ForEach(filteredProperties) { property in
-                                    PropertyGridCell(
-                                        property: property,
-                                        gridWidth: geometry.size.width,
-                                        isSelected: selectedProperties.contains(property.id)
-                                    )
-                                    .onTapGesture {
-                                        if selectionMode {
-                                            if selectedProperties.contains(property.id) {
-                                                selectedProperties.remove(property.id)
-                                            } else {
-                                                selectedProperties.insert(property.id)
-                                            }
-                                        } else {
-                                            selectedProperty = property
-                                        }
-                                    }
-                                    .onLongPressGesture {
-                                        if !selectionMode {
-                                            let matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
-                                            currentMatches = matches
-                                            showMatches = true
-                                            
-                                            print("🎯 Long press: Found \(matches.count) matches for \(property.title)")
-                                            
-                                            let generator = UIImpactFeedbackGenerator(style: .medium)
-                                            generator.impactOccurred()
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 8)
-                        }
-                        .refreshable {
-                            await viewModel.fetchProperties()
-                        }
-                    }
-                }
-                
-                if viewModel.isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.black.opacity(0.1))
-                }
-            }
+            mainContent
             .navigationTitle("Properties")
             .navigationBarTitleDisplayMode(.large)
             .background(colorScheme == .dark ? Color.backgroundDark : Color.backgroundLight)
             .tint(.primaryBlue)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if !viewModel.properties.isEmpty {
-                        Menu {
-                            ForEach(PropertyFilter.allCases, id: \.self) { filter in
-                                Button {
-                                    selectedFilter = filter
-                                } label: {
-                                    Label(filter.rawValue, systemImage: filter.icon)
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "line.3.horizontal.decrease.circle")
-                                    .font(.title3)
-                                if selectedFilter != .all {
-                                    Text(selectedFilter.rawValue)
-                                        .font(.caption.bold())
-                                }
-                            }
-                            .foregroundColor(.primaryBlue)
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 12) {
-                        if !viewModel.properties.isEmpty {
-                            Button {
-                                selectionMode.toggle()
-                                if !selectionMode {
-                                    selectedProperties.removeAll()
-                                }
-                            } label: {
-                                Text(selectionMode ? "Done" : "Select")
-                                    .foregroundColor(.primaryBlue)
-                            }
-                        }
-                        
-                        Button {
-                            showAddProperty = true
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.primaryBlue)
-                        }
-                    }
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if selectionMode && !selectedProperties.isEmpty {
-                    HStack(spacing: 16) {
-                        Button {
-                            showDeleteAlert = true
-                        } label: {
-                            Label("Delete \(selectedProperties.count)", systemImage: "trash")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.errorRed)
-                                .cornerRadius(12)
-                        }
-                    }
-                    .padding()
-                    .background(Color.cardBackground.opacity(0.95))
-                }
-            }
+            .toolbar { toolbarContent }
+            .overlay(alignment: .bottom) { deleteOverlay }
             .alert("Delete Properties?", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
@@ -214,13 +94,146 @@ struct PropertiesListView: View {
                     .environmentObject(leadViewModel)
             }
             .sheet(isPresented: $showMatches) {
-                PropertyMatchesSheet(matches: currentMatches)
-                    .presentationDetents([.medium, .large])
+                if let property = matchesProperty {
+                    PropertyMatchesSheet(matches: currentMatches, property: property)
+                        .environmentObject(leadViewModel)
+                        .presentationDetents([.medium, .large])
+                }
             }
         }
     }
     
     // MARK: - View Components
+    
+    private var mainContent: some View {
+        ZStack {
+            matchNotificationBadge
+            
+            if filteredProperties.isEmpty && !viewModel.isLoading {
+                emptyStateView
+            } else {
+                propertiesGridView
+            }
+            
+            if viewModel.isLoading {
+                loadingOverlay
+            }
+        }
+    }
+    
+    private var propertiesGridView: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(filteredProperties) { property in
+                        PropertyGridCell(
+                            property: property,
+                            gridWidth: geometry.size.width,
+                            isSelected: selectedProperties.contains(property.id)
+                        )
+                        .onTapGesture {
+                            handlePropertyTap(property)
+                        }
+                        .onLongPressGesture {
+                            handlePropertyLongPress(property)
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 8)
+            }
+            .refreshable {
+                await viewModel.fetchProperties()
+            }
+        }
+    }
+    
+    private var loadingOverlay: some View {
+        ProgressView()
+            .scaleEffect(1.5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.1))
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            if !viewModel.properties.isEmpty {
+                filterMenu
+            }
+        }
+        
+        ToolbarItem(placement: .navigationBarTrailing) {
+            trailingToolbarButtons
+        }
+    }
+    
+    private var filterMenu: some View {
+        Menu {
+            ForEach(PropertyFilter.allCases, id: \.self) { filter in
+                Button {
+                    selectedFilter = filter
+                } label: {
+                    Label(filter.rawValue, systemImage: filter.icon)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.title3)
+                if selectedFilter != .all {
+                    Text(selectedFilter.rawValue)
+                        .font(.caption.bold())
+                }
+            }
+            .foregroundColor(.primaryBlue)
+        }
+    }
+    
+    private var trailingToolbarButtons: some View {
+        HStack(spacing: 12) {
+            if !viewModel.properties.isEmpty {
+                Button {
+                    selectionMode.toggle()
+                    if !selectionMode {
+                        selectedProperties.removeAll()
+                    }
+                } label: {
+                    Text(selectionMode ? "Done" : "Select")
+                        .foregroundColor(.primaryBlue)
+                }
+            }
+            
+            Button {
+                showAddProperty = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.primaryBlue)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var deleteOverlay: some View {
+        if selectionMode && !selectedProperties.isEmpty {
+            HStack(spacing: 16) {
+                Button {
+                    showDeleteAlert = true
+                } label: {
+                    Label("Delete \(selectedProperties.count)", systemImage: "trash")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.errorRed)
+                        .cornerRadius(12)
+                }
+            }
+            .padding()
+            .background(Color.cardBackground.opacity(0.95))
+        }
+    }
     
     @ViewBuilder
     private var matchNotificationBadge: some View {
@@ -306,6 +319,34 @@ struct PropertiesListView: View {
             .padding(.horizontal, 30)
         }
         .padding(.vertical, 60)
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func handlePropertyTap(_ property: Property) {
+        if selectionMode {
+            if selectedProperties.contains(property.id) {
+                selectedProperties.remove(property.id)
+            } else {
+                selectedProperties.insert(property.id)
+            }
+        } else {
+            selectedProperty = property
+        }
+    }
+    
+    private func handlePropertyLongPress(_ property: Property) {
+        if !selectionMode {
+            let matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
+            currentMatches = matches
+            matchesProperty = property
+            showMatches = true
+            
+            print("🎯 Long press: Found \(matches.count) matches for \(property.title)")
+            
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+        }
     }
     
     private func deleteSelectedProperties() async {
