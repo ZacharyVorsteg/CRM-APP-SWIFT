@@ -8,6 +8,7 @@ struct PropertyDetailView: View {
     @EnvironmentObject var leadViewModel: LeadViewModel
     @State private var showEditSheet = false
     @State private var showMatchesSheet = false
+    @State private var showDeleteAlert = false
     @State private var matches: [LeadPropertyMatch] = []
     
     var body: some View {
@@ -250,12 +251,17 @@ struct PropertyDetailView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showEditSheet) {
+                EditPropertyView(property: property)
+                    .environmentObject(viewModel)
+            }
             .sheet(isPresented: $showMatchesSheet) {
                 PropertyMatchesSheet(matches: matches)
             }
             .onAppear {
                 // Calculate matches on appear
                 matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
+                print("🎯 Calculated \(matches.count) matches for \(property.title)")
             }
         }
     }

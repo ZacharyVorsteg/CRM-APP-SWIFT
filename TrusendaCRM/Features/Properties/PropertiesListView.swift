@@ -80,25 +80,26 @@ struct PropertiesListView: View {
                     .padding(.vertical, 60)
                 } else {
                     // Instagram-style 3-column grid
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 8) {
-                            ForEach(viewModel.properties) { property in
-                                PropertyGridCell(property: property)
-                                    .onTapGesture {
-                                        selectedProperty = property
-                                    }
-                                    .onLongPressGesture {
-                                        // Show matches for this property
-                                        let matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
-                                        if !matches.isEmpty {
+                    GeometryReader { geometry in
+                        ScrollView {
+                            LazyVGrid(columns: columns, spacing: 8) {
+                                ForEach(viewModel.properties) { property in
+                                    PropertyGridCell(property: property, gridWidth: geometry.size.width)
+                                        .onTapGesture {
+                                            selectedProperty = property
+                                        }
+                                        .onLongPressGesture {
+                                            // Show matches for this property
+                                            let matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
                                             currentMatches = matches
                                             showMatches = true
+                                            
+                                            print("🎯 Long press: Found \(matches.count) matches for \(property.title)")
                                             
                                             // Haptic feedback
                                             let generator = UIImpactFeedbackGenerator(style: .medium)
                                             generator.impactOccurred()
                                         }
-                                    }
                             }
                         }
                         .padding(.horizontal, 4)
@@ -107,7 +108,7 @@ struct PropertiesListView: View {
                     .refreshable {
                         await viewModel.fetchProperties()
                     }
-                }
+                    }
                 
                 // Loading overlay
                 if viewModel.isLoading {
@@ -155,6 +156,15 @@ struct PropertiesListView: View {
 // MARK: - Property Grid Cell (Instagram Style)
 struct PropertyGridCell: View {
     let property: Property
+    let gridWidth: CGFloat
+    
+    // Calculate cell width (3 columns with spacing)
+    private var cellWidth: CGFloat {
+        let spacing: CGFloat = 8
+        let totalSpacing = spacing * 4 // 4 gaps (2 between columns + 2 edges)
+        let availableWidth = gridWidth - totalSpacing
+        return availableWidth / 3
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -164,6 +174,7 @@ struct PropertyGridCell: View {
                     // TODO: Load actual image from URL/data
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
+                        .frame(width: cellWidth, height: cellWidth)
                 } else {
                     // Placeholder with property type icon
                     Rectangle()
@@ -174,6 +185,7 @@ struct PropertyGridCell: View {
                                 endPoint: .bottomTrailing
                             )
                         )
+                        .frame(width: cellWidth, height: cellWidth)
                         .overlay(
                             Image(systemName: propertyTypeIcon)
                                 .font(.system(size: 40, weight: .light))
@@ -199,7 +211,7 @@ struct PropertyGridCell: View {
                     Spacer()
                 }
             }
-            .aspectRatio(1, contentMode: .fill)  // Square like Instagram
+            .frame(width: cellWidth, height: cellWidth)
             .clipped()
             
             // Info overlay at bottom
