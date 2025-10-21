@@ -130,68 +130,110 @@ struct PropertyDetailView: View {
                     )
                     .padding(.horizontal, 16)
                     
-                    // Matching Leads Section
+                    // Matching Leads Section - Enhanced with tap-to-expand
                     if !matches.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("MATCHED LEADS")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.secondary)
-                                    .tracking(0.8)
-                                
-                                Spacer()
-                                
-                                Text("\(matches.count) matches")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.successGreen)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.successGreen.opacity(0.15))
-                                    .cornerRadius(6)
-                            }
-                            
-                            // Top 3 matches preview
-                            ForEach(matches.prefix(3)) { match in
+                        Button {
+                            showMatchesSheet = true
+                        } label: {
+                            VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(match.lead.name)
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.primary)
-                                        
-                                        if let company = match.lead.company {
-                                            Text(company)
-                                                .font(.system(size: 13))
-                                                .foregroundColor(.secondary)
-                                        }
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "person.2.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.successGreen)
+                                        Text("MATCHED LEADS")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.secondary)
+                                            .tracking(0.8)
                                     }
                                     
                                     Spacer()
                                     
-                                    // Match score
-                                    Text("\(match.matchScore)%")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(match.matchQuality == .excellent ? .successGreen : .primaryBlue)
+                                    HStack(spacing: 6) {
+                                        Text("\(matches.count)")
+                                            .font(.caption.bold())
+                                            .foregroundColor(.successGreen)
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.successGreen)
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Color.successGreen.opacity(0.15))
+                                    .cornerRadius(8)
                                 }
-                                .padding(.vertical, 8)
                                 
-                                if match.id != matches.prefix(3).last?.id {
-                                    Divider()
+                                // Top 3 matches preview
+                                VStack(spacing: 8) {
+                                    ForEach(matches.prefix(3)) { match in
+                                        HStack(spacing: 12) {
+                                            // Avatar
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.primaryBlue.opacity(0.12))
+                                                    .frame(width: 36, height: 36)
+                                                Text(match.lead.name.prefix(1).uppercased())
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(.primaryBlue)
+                                            }
+                                            
+                                            // Info
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(match.lead.name)
+                                                    .font(.system(size: 15, weight: .semibold))
+                                                    .foregroundColor(.primary)
+                                                
+                                                if let company = match.lead.company {
+                                                    Text(company)
+                                                        .font(.system(size: 12))
+                                                        .foregroundColor(.secondary)
+                                                }
+                                                
+                                                // First match reason
+                                                if let firstReason = match.matchReasons.first {
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.system(size: 10))
+                                                            .foregroundColor(.successGreen)
+                                                        Text(firstReason)
+                                                            .font(.system(size: 11))
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                    .padding(.top, 2)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Match score
+                                            Text("\(match.matchScore)%")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(match.matchQuality == .excellent ? .successGreen : .primaryBlue)
+                                        }
+                                        .padding(.vertical, 6)
+                                        
+                                        if match.id != matches.prefix(3).last?.id {
+                                            Divider()
+                                        }
+                                    }
+                                }
+                                
+                                // Tap to view all hint
+                                if matches.count > 0 {
+                                    HStack {
+                                        Spacer()
+                                        Text("Tap to view details, match reasons, and send")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.primaryBlue)
+                                        Image(systemName: "arrow.right.circle.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.primaryBlue)
+                                    }
+                                    .padding(.top, 4)
                                 }
                             }
-                            
-                            if matches.count > 3 {
-                                Button {
-                                    showMatchesSheet = true
-                                } label: {
-                                    Text("View All \(matches.count) Matches")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.primaryBlue)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 8)
-                            }
+                            .padding(16)
                         }
-                        .padding(16)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.successGreen.opacity(0.06))
@@ -304,7 +346,8 @@ struct PropertyDetailView: View {
                     .environmentObject(viewModel)
             }
             .sheet(isPresented: $showMatchesSheet) {
-                PropertyMatchesSheet(matches: matches)
+                PropertyMatchesSheet(matches: matches, property: property)
+                    .environmentObject(leadViewModel)
             }
             .sheet(isPresented: $showShareSheet) {
                 PropertyShareSheet(property: property, matches: matches)

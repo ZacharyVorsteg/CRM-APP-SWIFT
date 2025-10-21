@@ -476,60 +476,201 @@ struct PropertyGridCell: View {
 
 struct PropertyMatchesSheet: View {
     let matches: [LeadPropertyMatch]
+    let property: Property
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var leadViewModel: LeadViewModel
+    @State private var selectedLead: Lead?
+    @State private var showShareSheet = false
+    @State private var leadToShare: Lead?
+    @State private var expandedMatchId: String?
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(matches) { match in
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(match.lead.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                if let company = match.lead.company {
-                                    Text(company)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            VStack(spacing: 2) {
-                                Text("\(match.matchScore)%")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(match.matchQuality == .excellent ? .successGreen : .primaryBlue)
-                                Text(match.matchQuality.label)
-                                    .font(.system(size: 9, weight: .medium))
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.primaryBlue.opacity(0.1))
-                            )
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(match.matchReasons, id: \.self) { reason in
-                                HStack(spacing: 6) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.successGreen)
-                                    Text(reason)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding(.top, 4)
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Header Stats
+                    VStack(spacing: 8) {
+                        Text("\(matches.count) Matching Leads")
+                            .font(.title2.bold())
+                            .foregroundColor(.primary)
+                        Text("Tap any lead to view details or send property")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 8)
+                    .padding()
+                    
+                    // Matched Leads List
+                    ForEach(matches) { match in
+                        VStack(spacing: 0) {
+                            // Lead Card Header - Tappable
+                            Button {
+                                withAnimation(.spring(response: 0.3)) {
+                                    if expandedMatchId == match.id {
+                                        expandedMatchId = nil
+                                    } else {
+                                        expandedMatchId = match.id
+                                    }
+                                }
+                            } label: {
+                                HStack(spacing: 12) {
+                                    // Lead Avatar/Initial
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.primaryBlue.opacity(0.15))
+                                            .frame(width: 48, height: 48)
+                                        Text(match.lead.name.prefix(1).uppercased())
+                                            .font(.system(size: 20, weight: .bold))
+                                            .foregroundColor(.primaryBlue)
+                                    }
+                                    
+                                    // Lead Info
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(match.lead.name)
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(.primary)
+                                        
+                                        if let company = match.lead.company {
+                                            Text(company)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    // Match Score Badge
+                                    VStack(spacing: 2) {
+                                        Text("\(match.matchScore)%")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundColor(matchScoreColor(match.matchScore))
+                                        Text("MATCH")
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(matchScoreColor(match.matchScore).opacity(0.12))
+                                    )
+                                    
+                                    // Chevron
+                                    Image(systemName: expandedMatchId == match.id ? "chevron.up" : "chevron.down")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                        .padding(.leading, 4)
+                                }
+                                .padding(16)
+                            }
+                            
+                            // Expanded Details
+                            if expandedMatchId == match.id {
+                                VStack(alignment: .leading, spacing: 16) {
+                                    Divider()
+                                    
+                                    // Match Reasons
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Why This Matches:")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundColor(.secondary)
+                                            .textCase(.uppercase)
+                                        
+                                        ForEach(match.matchReasons, id: \.self) { reason in
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.successGreen)
+                                                Text(reason)
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.primary)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    
+                                    // Lead Details
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        if let email = match.lead.email, !email.isEmpty {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "envelope.fill")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.primaryBlue)
+                                                Text(email)
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        
+                                        if let phone = match.lead.phone, !phone.isEmpty {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "phone.fill")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.primaryBlue)
+                                                Text(phone)
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    
+                                    // Action Buttons
+                                    HStack(spacing: 12) {
+                                        // View Lead Details
+                                        Button {
+                                            selectedLead = match.lead
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: "person.circle")
+                                                Text("View Details")
+                                            }
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(.primaryBlue)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color.primaryBlue.opacity(0.1))
+                                            )
+                                        }
+                                        
+                                        // Send Property
+                                        Button {
+                                            leadToShare = match.lead
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: "paperplane.fill")
+                                                Text("Send Property")
+                                            }
+                                            .font(.system(size: 15, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .cornerRadius(10)
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 12)
+                                }
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.cardBackground)
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 16)
+                    }
                 }
+                .padding(.vertical)
             }
             .navigationTitle("Matching Leads")
             .navigationBarTitleDisplayMode(.inline)
@@ -541,7 +682,47 @@ struct PropertyMatchesSheet: View {
                     .foregroundColor(.primaryBlue)
                 }
             }
+            .sheet(item: $selectedLead) { lead in
+                LeadDetailView(lead: lead)
+                    .environmentObject(leadViewModel)
+            }
+            .sheet(item: $leadToShare) { lead in
+                LeadShareActionSheet(
+                    lead: lead,
+                    propertyText: generateShareText(for: lead),
+                    propertyURL: "https://trusenda.com/property/\(property.id)",
+                    trackedURL: generateTrackedURL(for: lead)
+                )
+            }
         }
+    }
+    
+    private func matchScoreColor(_ score: Int) -> Color {
+        if score >= 70 { return .successGreen }
+        if score >= 50 { return .primaryBlue }
+        return .orange
+    }
+    
+    private func generateShareText(for lead: Lead) -> String {
+        var text = "🏢 Hi \(lead.name), check out this property that might be perfect for you:\n\n"
+        text += "\(property.title)\n"
+        if let address = property.address {
+            text += "📍 \(address)\n\n"
+        }
+        text += "👀 View full details:\n"
+        return text
+    }
+    
+    private func generateTrackedURL(for lead: Lead) -> String {
+        let baseURL = "https://trusenda.com/property/\(property.id)"
+        var components = URLComponents(string: baseURL)!
+        var queryItems = [URLQueryItem(name: "leadId", value: lead.id)]
+        queryItems.append(URLQueryItem(name: "leadName", value: lead.name))
+        if let email = lead.email { queryItems.append(URLQueryItem(name: "leadEmail", value: email)) }
+        if let phone = lead.phone { queryItems.append(URLQueryItem(name: "leadPhone", value: phone)) }
+        if let company = lead.company { queryItems.append(URLQueryItem(name: "leadCompany", value: company)) }
+        components.queryItems = queryItems
+        return components.url?.absoluteString ?? baseURL
     }
 }
 
