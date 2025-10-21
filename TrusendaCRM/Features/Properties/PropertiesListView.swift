@@ -9,7 +9,6 @@ struct PropertiesListView: View {
     @State private var showMatches = false
     @State private var currentMatches: [LeadPropertyMatch] = []
     
-    // Instagram-style 3-column grid layout
     let columns = [
         GridItem(.flexible(), spacing: 8),
         GridItem(.flexible(), spacing: 8),
@@ -20,7 +19,6 @@ struct PropertiesListView: View {
         NavigationView {
             ZStack {
                 if viewModel.properties.isEmpty && !viewModel.isLoading {
-                    // Empty state - matches app aesthetic
                     VStack(spacing: 24) {
                         ZStack {
                             Circle()
@@ -53,7 +51,6 @@ struct PropertiesListView: View {
                                 .padding(.horizontal, 40)
                         }
                         
-                        // Helpful tip
                         HStack(spacing: 8) {
                             Image(systemName: "lightbulb.fill")
                                 .font(.system(size: 14))
@@ -79,7 +76,6 @@ struct PropertiesListView: View {
                     }
                     .padding(.vertical, 60)
                 } else {
-                    // Instagram-style 3-column grid
                     GeometryReader { geometry in
                         ScrollView {
                             LazyVGrid(columns: columns, spacing: 8) {
@@ -89,28 +85,26 @@ struct PropertiesListView: View {
                                             selectedProperty = property
                                         }
                                         .onLongPressGesture {
-                                            // Show matches for this property
                                             let matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
                                             currentMatches = matches
                                             showMatches = true
                                             
                                             print("🎯 Long press: Found \(matches.count) matches for \(property.title)")
                                             
-                                            // Haptic feedback
                                             let generator = UIImpactFeedbackGenerator(style: .medium)
                                             generator.impactOccurred()
                                         }
+                                }
                             }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
+                        .refreshable {
+                            await viewModel.fetchProperties()
+                        }
                     }
-                    .refreshable {
-                        await viewModel.fetchProperties()
-                    }
-                    }
+                }
                 
-                // Loading overlay
                 if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
@@ -153,30 +147,25 @@ struct PropertiesListView: View {
     }
 }
 
-// MARK: - Property Grid Cell (Instagram Style)
 struct PropertyGridCell: View {
     let property: Property
     let gridWidth: CGFloat
     
-    // Calculate cell width (3 columns with spacing)
     private var cellWidth: CGFloat {
         let spacing: CGFloat = 8
-        let totalSpacing = spacing * 4 // 4 gaps (2 between columns + 2 edges)
+        let totalSpacing = spacing * 4
         let availableWidth = gridWidth - totalSpacing
         return availableWidth / 3
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            // Image (square aspect ratio like Instagram)
             ZStack {
                 if let primaryImage = property.primaryImage, !primaryImage.isEmpty {
-                    // TODO: Load actual image from URL/data
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(width: cellWidth, height: cellWidth)
                 } else {
-                    // Placeholder with property type icon
                     Rectangle()
                         .fill(
                             LinearGradient(
@@ -193,7 +182,6 @@ struct PropertyGridCell: View {
                         )
                 }
                 
-                // Status badge (top right)
                 VStack {
                     HStack {
                         Spacer()
@@ -214,7 +202,6 @@ struct PropertyGridCell: View {
             .frame(width: cellWidth, height: cellWidth)
             .clipped()
             
-            // Info overlay at bottom
             VStack(alignment: .leading, spacing: 2) {
                 Text(property.title)
                     .font(.system(size: 11, weight: .semibold))
@@ -228,8 +215,8 @@ struct PropertyGridCell: View {
                         .lineLimit(1)
                 }
                 
-                if let price = property.price, !price.isEmpty {
-                    Text(price)
+                if let budget = property.budget, !budget.isEmpty {
+                    Text(budget)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.successGreen)
                         .lineLimit(1)
@@ -268,7 +255,6 @@ struct PropertyGridCell: View {
     }
 }
 
-// MARK: - Property Matches Sheet
 struct PropertyMatchesSheet: View {
     let matches: [LeadPropertyMatch]
     @Environment(\.dismiss) private var dismiss
@@ -293,7 +279,6 @@ struct PropertyMatchesSheet: View {
                             
                             Spacer()
                             
-                            // Match score badge
                             VStack(spacing: 2) {
                                 Text("\(match.matchScore)%")
                                     .font(.system(size: 16, weight: .bold))
@@ -310,7 +295,6 @@ struct PropertyMatchesSheet: View {
                             )
                         }
                         
-                        // Match reasons
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(match.matchReasons, id: \.self) { reason in
                                 HStack(spacing: 6) {
