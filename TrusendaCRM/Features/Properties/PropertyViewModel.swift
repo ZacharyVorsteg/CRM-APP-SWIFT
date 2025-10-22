@@ -9,6 +9,10 @@ class PropertyViewModel: ObservableObject {
     
     private let apiClient = APIClient.shared
     
+    // PERFORMANCE: Cache match calculations to avoid expensive recalculations
+    private var matchCache: [String: [LeadPropertyMatch]] = [:]
+    private var lastLeadsHash: Int = 0
+    
     // Fetch all properties
     func fetchProperties() async {
         isLoading = true
@@ -17,23 +21,22 @@ class PropertyViewModel: ObservableObject {
         do {
             let response: PropertiesResponse = try await apiClient.get(endpoint: .properties)
             
-            // Force main thread update
-            await MainActor.run {
-                properties = response.properties
-                print("✅ Fetched \(properties.count) properties")
-                print("   Properties: \(properties.map { $0.title }.joined(separator: ", "))")
-            }
+            // Already on MainActor - no need for explicit MainActor.run
+            properties = response.properties
+            
+            #if DEBUG
+            print("✅ Fetched \(properties.count) properties")
+            print("   Properties: \(properties.map { $0.title }.joined(separator: ", "))")
+            #endif
             
         } catch {
+            #if DEBUG
             print("❌ Error fetching properties:", error)
-            await MainActor.run {
-                errorMessage = error.localizedDescription
-            }
+            #endif
+            errorMessage = error.localizedDescription
         }
         
-        await MainActor.run {
-            isLoading = false
-        }
+        isLoading = false
     }
     
     // Add new property
@@ -47,12 +50,17 @@ class PropertyViewModel: ObservableObject {
         properties.insert(response.property, at: 0)
         
         // Store matches for notifications
-        if !response.matches.isEmpty {
-            print("🎯 Property matched with \(response.matches.count) leads")
+        let matchCount = response.matches.count
+        if matchCount > 0 {
+            #if DEBUG
+            print("🎯 Property matched with \(matchCount) leads")
+            #endif
             // Could trigger notifications here
         }
         
+        #if DEBUG
         print("✅ Property added: \(response.property.title)")
+        #endif
     }
     
     // Update property
@@ -67,7 +75,9 @@ class PropertyViewModel: ObservableObject {
             properties[index] = response.property
         }
         
+        #if DEBUG
         print("✅ Property updated: \(response.property.title)")
+        #endif
     }
     
     // Delete property
@@ -77,21 +87,46 @@ class PropertyViewModel: ObservableObject {
         // Remove from local list
         properties.removeAll { $0.id == id }
         
+        #if DEBUG
         print("✅ Property deleted")
+        #endif
     }
     
     // Calculate matches for a property with leads
     // WEIGHTED AVERAGE: Score is against TOTAL possible (110 pts), not just available data
     // This gives an honest, accurate representation of match quality
+    // PERFORMANCE OPTIMIZED: Uses caching to avoid expensive recalculations
     func calculateMatches(for property: Property, with leads: [Lead]) -> [LeadPropertyMatch] {
+        // Generate cache key from property ID and leads hash
+        let leadsHash = leads.map { $0.id }.joined().hashValue
+        let cacheKey = "\(property.id)_\(leadsHash)"
+        
+        // Check if leads have changed (invalidate cache if needed)
+        if leadsHash != lastLeadsHash {
+            matchCache.removeAll()
+            lastLeadsHash = leadsHash
+        }
+        
+        // Return cached result if available (FAST PATH)
+        if let cachedMatches = matchCache[cacheKey] {
+            #if DEBUG
+            // Only log cache hits in debug mode
+            // print("✅ Match cache hit for property: \(property.title)")
+            #endif
+            return cachedMatches
+        }
+        
+        // Cache miss - calculate matches (SLOW PATH)
         var matches: [LeadPropertyMatch] = []
         
         // REDESIGNED SCORING (emphasizes substantive criteria)
         // Total: 100 points distributed by importance
         let MAX_TOTAL_SCORE = 100
         
+        #if DEBUG
         print("🔍 Calculating matches for property: \(property.title)")
         print("   Property has: type=\(property.propertyType ?? "missing"), size=\(property.sizeMin ?? "nil")-\(property.sizeMax ?? "nil"), budget=\(property.budget ?? "missing"), industry=\(property.industry ?? "missing"), city=\(property.city ?? "missing")")
+        #endif
         
         for lead in leads {
             var score = 0
@@ -118,7 +153,8 @@ class PropertyViewModel: ObservableObject {
                         reasons.append("Perfect size fit (\(formatNumber(propMin))-\(formatNumber(propMax)) SF)")
                     } else {
                         // Partial overlap - score proportionally
-                        let overlapPercentage = Double(overlapSize) / Double(leadRangeSize)
+                        // Prevent division by zero / NaN
+                        let overlapPercentage = leadRangeSize > 0 ? Double(overlapSize) / Double(leadRangeSize) : 0.0
                         let partialScore = Int(40.0 * overlapPercentage)
                         score += partialScore
                         reasons.append("Size range overlap (\(formatNumber(propMin))-\(formatNumber(propMax)) SF)")
@@ -171,12 +207,15 @@ class PropertyViewModel: ObservableObject {
             // NOTE: Transaction type (Lease/Sale) is NOT scored
             // It's assumed to be pre-filtered or a basic requirement
             
-            let matchPercentage = Int((Double(score) / Double(MAX_TOTAL_SCORE)) * 100)
+            // Prevent division by zero / NaN
+            let matchPercentage = MAX_TOTAL_SCORE > 0 ? Int((Double(score) / Double(MAX_TOTAL_SCORE)) * 100) : 0
             
+            #if DEBUG
             print("   \(lead.name): \(score)/\(MAX_TOTAL_SCORE) points = \(matchPercentage)%")
             if !missingCriteria.isEmpty {
                 print("      Missing: \(missingCriteria.joined(separator: ", "))")
             }
+            #endif
             
             // Only show meaningful matches (at least 40% of possible score)
             // This ensures substantive criteria are met
@@ -188,13 +227,23 @@ class PropertyViewModel: ObservableObject {
                     matchScore: matchPercentage,
                     matchReasons: reasons
                 ))
+                #if DEBUG
                 print("   ✅ MATCH! \(lead.name) - \(matchPercentage)% - \(reasons.joined(separator: ", "))")
+                #endif
             }
         }
         
+        #if DEBUG
         print("🎯 Total matches found: \(matches.count)")
+        #endif
         
-        return matches.sorted { $0.matchScore > $1.matchScore }
+        // Sort matches by score (best first)
+        let sortedMatches = matches.sorted { $0.matchScore > $1.matchScore }
+        
+        // Cache the result for future calls (PERFORMANCE OPTIMIZATION)
+        matchCache[cacheKey] = sortedMatches
+        
+        return sortedMatches
     }
     
     // MARK: - Smart Budget Matching
@@ -217,7 +266,8 @@ class PropertyViewModel: ObservableObject {
                 let overlapAmount = overlapEnd - overlapStart
                 let leadRangeSize = leadMax - leadMin
                 
-                let overlapPercentage = Double(overlapAmount) / Double(max(leadRangeSize, 1))
+                // Prevent division by zero / NaN
+                let overlapPercentage = leadRangeSize > 0 ? Double(overlapAmount) / Double(leadRangeSize) : 0.0
                 let score = Int(35.0 * max(0.5, overlapPercentage)) // Minimum 50% of points for any overlap
                 
                 return (score, "Budget aligned ($\(formatBudget(propMin))-$\(formatBudget(propMax))/mo)")

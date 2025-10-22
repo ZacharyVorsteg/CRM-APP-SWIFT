@@ -772,9 +772,14 @@ struct SignUpView: View {
                                     .textFieldStyle(CustomTextFieldStyle())
                                     .textContentType(.newPassword)
                                 
-                                Text("Minimum 6 characters")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.6))
+                                HStack(spacing: 6) {
+                                    Image(systemName: viewModel.password.count >= 6 ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(viewModel.password.count >= 6 ? .successGreen : .warningOrange)
+                                    Text("Minimum 6 characters")
+                                        .font(.caption)
+                                        .foregroundColor(viewModel.password.count >= 6 ? .successGreen : .white.opacity(0.6))
+                                }
                             }
                             
                             // Legal Agreement Section
@@ -817,14 +822,23 @@ struct SignUpView: View {
                                 }
                             }
                             .buttonStyle(PremiumGradientButtonStyle())
-                            .disabled(viewModel.isLoading || !agreedToTerms)
-                            .opacity((viewModel.isLoading || !agreedToTerms) ? 0.6 : 1.0)
+                            .disabled(viewModel.isLoading || !agreedToTerms || viewModel.password.count < 6)
+                            .opacity((viewModel.isLoading || !agreedToTerms || viewModel.password.count < 6) ? 0.6 : 1.0)
                             
                             if !agreedToTerms {
                                 HStack(spacing: 6) {
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .font(.system(size: 12))
                                     Text("Please accept the terms to continue")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.warningOrange)
+                                .padding(.top, -4)
+                            } else if viewModel.password.count < 6 {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 12))
+                                    Text("Password must be at least 6 characters")
                                         .font(.caption)
                                 }
                                 .foregroundColor(.warningOrange)

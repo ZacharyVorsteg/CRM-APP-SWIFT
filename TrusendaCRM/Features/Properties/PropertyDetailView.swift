@@ -11,6 +11,8 @@ struct PropertyDetailView: View {
     @State private var showDeleteAlert = false
     @State private var showShareSheet = false
     @State private var matches: [LeadPropertyMatch] = []
+    @State private var showPhotoGallery = false
+    @State private var selectedPhotoIndex = 0
     
     var body: some View {
         NavigationView {
@@ -64,19 +66,42 @@ struct PropertyDetailView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     
-                    // Photo Gallery (if images exist)
+                    // Photo Gallery (if images exist) - Tap to expand fullscreen
                     if let images = property.images, !images.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
                                 ForEach(Array(images.enumerated()), id: \.offset) { index, imageString in
-                                    if let image = loadBase64Image(imageString) {
-                                        Image(uiImage: image)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 300, height: 200)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                    Button {
+                                        selectedPhotoIndex = index
+                                        showPhotoGallery = true
+                                        
+                                        // Haptic feedback
+                                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                                        generator.impactOccurred()
+                                    } label: {
+                                        ZStack(alignment: .topTrailing) {
+                                            if let image = loadBase64Image(imageString) {
+                                                Image(uiImage: image)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 300, height: 200)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                            }
+                                            
+                                            // Expand icon overlay
+                                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(8)
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.black.opacity(0.6))
+                                                )
+                                                .padding(8)
+                                        }
                                     }
+                                    .buttonStyle(.plain)
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -352,6 +377,15 @@ struct PropertyDetailView: View {
             .sheet(isPresented: $showShareSheet) {
                 PropertyShareSheet(property: property, matches: matches)
             }
+            .fullScreenCover(isPresented: $showPhotoGallery) {
+                if let images = property.images, !images.isEmpty {
+                    FullscreenPhotoGalleryView(
+                        images: images,
+                        currentIndex: $selectedPhotoIndex,
+                        isPresented: $showPhotoGallery
+                    )
+                }
+            }
             .onAppear {
                 // Calculate matches on appear
                 matches = viewModel.calculateMatches(for: property, with: leadViewModel.leads)
@@ -393,6 +427,189 @@ struct PropertyDetailView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: number)) ?? value
+    }
+    
+    // Load base64 encoded image
+    private func loadBase64Image(_ base64String: String) -> UIImage? {
+        var imageString = base64String
+        if imageString.hasPrefix("data:image") {
+            if let commaRange = imageString.range(of: ",") {
+                imageString = String(imageString[commaRange.upperBound...])
+            }
+        }
+        
+        guard let imageData = Data(base64Encoded: imageString, options: .ignoreUnknownCharacters) else {
+            return nil
+        }
+        
+        return UIImage(data: imageData)
+    }
+}
+
+// MARK: - Fullscreen Photo Gallery
+struct FullscreenPhotoGalleryView: View {
+    let images: [String]
+    @Binding var currentIndex: Int
+    @Binding var isPresented: Bool
+    
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+    
+    var body: some View {
+        ZStack {
+            // Black background
+            Color.black
+                .ignoresSafeArea()
+            
+            // Photo viewer with swipe
+            TabView(selection: $currentIndex) {
+                ForEach(Array(images.enumerated()), id: \.offset) { index, imageString in
+                    GeometryReader { geometry in
+                        ZStack {
+                            if let image = loadBase64Image(imageString) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                    .scaleEffect(scale)
+                                    .offset(offset)
+                                    .gesture(
+                                        MagnificationGesture()
+                                            .onChanged { value in
+                                                // Prevent division by zero / NaN
+                                                guard lastScale > 0 else {
+                                                    lastScale = 1.0
+                                                    return
+                                                }
+                                                let delta = value / lastScale
+                                                lastScale = value
+                                                scale *= delta
+                                            }
+                                            .onEnded { _ in
+                                                lastScale = 1.0
+                                                // Reset to 1.0 if zoomed out too far
+                                                if scale < 1.0 {
+                                                    withAnimation(.spring(response: 0.3)) {
+                                                        scale = 1.0
+                                                        offset = .zero
+                                                    }
+                                                }
+                                                // Limit max zoom
+                                                if scale > 4.0 {
+                                                    withAnimation(.spring(response: 0.3)) {
+                                                        scale = 4.0
+                                                    }
+                                                }
+                                            }
+                                    )
+                                    .gesture(
+                                        DragGesture()
+                                            .onChanged { value in
+                                                // Only allow pan when zoomed in
+                                                if scale > 1.0 {
+                                                    offset = CGSize(
+                                                        width: lastOffset.width + value.translation.width,
+                                                        height: lastOffset.height + value.translation.height
+                                                    )
+                                                }
+                                            }
+                                            .onEnded { _ in
+                                                lastOffset = offset
+                                                // Reset if zoomed out
+                                                if scale <= 1.0 {
+                                                    withAnimation(.spring(response: 0.3)) {
+                                                        offset = .zero
+                                                        lastOffset = .zero
+                                                    }
+                                                }
+                                            }
+                                    )
+                                    .onTapGesture(count: 2) {
+                                        // Double tap to zoom
+                                        withAnimation(.spring(response: 0.3)) {
+                                            if scale > 1.0 {
+                                                scale = 1.0
+                                                offset = .zero
+                                                lastOffset = .zero
+                                            } else {
+                                                scale = 2.5
+                                            }
+                                        }
+                                    }
+                            } else {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                    .tint(.white)
+                            }
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                    }
+                    .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .onChange(of: currentIndex) { _ in
+                // Reset zoom when swiping to next photo
+                withAnimation(.spring(response: 0.3)) {
+                    scale = 1.0
+                    offset = .zero
+                    lastOffset = .zero
+                }
+            }
+            
+            // Top bar with close button and counter
+            VStack {
+                HStack {
+                    // Close button
+                    Button {
+                        isPresented = false
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black.opacity(0.5))
+                                .frame(width: 44, height: 44)
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Photo counter
+                    Text("\(currentIndex + 1) of \(images.count)")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(Color.black.opacity(0.5))
+                        )
+                }
+                .padding()
+                
+                Spacer()
+                
+                // Bottom navigation dots (if more than 1 image)
+                if images.count > 1 {
+                    HStack(spacing: 8) {
+                        ForEach(0..<images.count, id: \.self) { index in
+                            Circle()
+                                .fill(index == currentIndex ? Color.white : Color.white.opacity(0.4))
+                                .frame(width: index == currentIndex ? 10 : 8, height: index == currentIndex ? 10 : 8)
+                                .scaleEffect(index == currentIndex ? 1.2 : 1.0)
+                                .animation(.spring(response: 0.3), value: currentIndex)
+                        }
+                    }
+                    .padding(.bottom, 30)
+                }
+            }
+        }
+        .statusBar(hidden: true)
     }
     
     // Load base64 encoded image

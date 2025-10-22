@@ -158,12 +158,9 @@ class AuthManager: ObservableObject {
     
     // MARK: - Get Valid Token
     func getValidToken() async throws -> String {
-        // SECURITY DESIGN DECISION:
-        // This implementation intentionally does NOT auto-refresh tokens.
-        // Tokens expire after 1 hour, forcing fresh authentication for security.
-        // This is acceptable for a CRM app and reduces attack surface.
-        // Web app: Uses netlify-identity-widget which auto-refreshes
-        // iOS app: Requires re-login for enhanced security (similar to banking apps)
+        // IMPROVED: Auto-refresh tokens to keep users logged in
+        // Matches cloud app behavior - seamless experience
+        // Users stay logged in indefinitely until they explicitly log out
         
         // Check if we have a valid token
         guard let token = keychain.get(.accessToken) else {
@@ -172,9 +169,29 @@ class AuthManager: ObservableObject {
         
         // Check if token is expired (with 5-minute buffer)
         if keychain.isTokenExpired() {
-            // Token expired - force re-authentication
-            logout()
-            throw NetworkError.unauthorized
+            // Token expired - try to refresh automatically
+            #if DEBUG
+            print("🔄 Token expired, attempting auto-refresh...")
+            #endif
+            
+            do {
+                try await refreshToken()
+                // Refresh successful - get new token
+                guard let newToken = keychain.get(.accessToken) else {
+                    throw NetworkError.unauthorized
+                }
+                #if DEBUG
+                print("✅ Token refreshed successfully")
+                #endif
+                return newToken
+            } catch {
+                // Refresh failed - logout and require login
+                #if DEBUG
+                print("❌ Token refresh failed - requiring login")
+                #endif
+                logout()
+                throw NetworkError.unauthorized
+            }
         }
         
         return token
@@ -186,43 +203,49 @@ class AuthManager: ObservableObject {
             throw NetworkError.unauthorized
         }
         
-        // Build refresh request
-        struct RefreshRequest: Codable {
-            let grantType = "refresh_token"
-            let refreshToken: String
-            
-            enum CodingKeys: String, CodingKey {
-                case grantType = "grant_type"
-                case refreshToken = "refresh_token"
-            }
+        // Use Netlify Identity token endpoint (same as login)
+        guard let url = URL(string: "https://trusenda.com/.netlify/identity/token") else {
+            throw NetworkError.invalidURL
         }
         
-        let request = RefreshRequest(refreshToken: refreshToken)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        do {
-            let response: AuthToken = try await client.post(
-                endpoint: .login,
-                body: request,
-                requiresAuth: false
-            )
-            
-            // Save new tokens
-            keychain.saveTokens(
-                accessToken: response.accessToken,
-                refreshToken: response.refreshToken ?? refreshToken,
-                expiresIn: response.expiresIn
-            )
-        } catch {
-            // If refresh fails, force logout
-            logout()
+        // URL-encode the refresh token request
+        let bodyString = "grant_type=refresh_token&refresh_token=\(refreshToken.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        request.httpBody = bodyString.data(using: .utf8)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.unknown
+        }
+        
+        if httpResponse.statusCode != 200 {
+            // Refresh failed - token is invalid
             throw NetworkError.unauthorized
         }
+        
+        // Parse new token
+        let tokenResponse = try JSONDecoder().decode(AuthToken.self, from: data)
+        
+        // Save new tokens
+        keychain.saveTokens(
+            accessToken: tokenResponse.accessToken,
+            refreshToken: tokenResponse.refreshToken ?? refreshToken,
+            expiresIn: tokenResponse.expiresIn
+        )
+        
+        #if DEBUG
+        print("✅ Token refreshed - new expiry in \(tokenResponse.expiresIn) seconds")
+        #endif
     }
     
     // MARK: - Check Auth on App Launch
     func checkAuthStatus() async {
         // Check if we have a valid token from previous session
-        guard let token = keychain.get(.accessToken),
+        guard let _ = keychain.get(.accessToken),
               !keychain.isTokenExpired() else {
             // No valid token - user needs to log in
             isAuthenticated = false

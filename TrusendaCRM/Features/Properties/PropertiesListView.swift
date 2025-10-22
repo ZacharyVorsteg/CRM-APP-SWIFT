@@ -32,7 +32,7 @@ struct PropertiesListView: View {
             case .leased: return "doc.text"
             case .warehouse: return "shippingbox.fill"
             case .office: return "building.2.fill"
-            case .industrial: return "factory.fill"
+            case .industrial: return "wrench.and.screwdriver.fill"
             case .retail: return "storefront.fill"
             }
         }
@@ -360,13 +360,17 @@ struct PropertyGridCell: View {
         let spacing: CGFloat = 8
         let totalSpacing = spacing * 4
         let availableWidth = gridWidth - totalSpacing
-        return availableWidth / 3
+        // Prevent NaN by ensuring positive width
+        guard availableWidth > 0 else { return 100 }
+        return max(100, availableWidth / 3)
     }
     
     // Fixed uniform dimensions
     private let imageHeight: CGFloat = 120
     private let detailsHeight: CGFloat = 60
     
+    // PERFORMANCE OPTIMIZED: Cache match count to avoid recalculation on every render
+    // This computed property now benefits from PropertyViewModel's internal caching
     var matchCount: Int {
         viewModel.calculateMatches(for: property, with: leadViewModel.leads).count
     }
@@ -397,10 +401,12 @@ struct PropertyGridCell: View {
                         
                         Spacer()
                         
-                        // Status Badge (top right)
+                        // Status Badge (top right) - Optimized for longer text
                         Text(property.status)
-                            .font(.system(size: 9, weight: .bold))
-                            .padding(.horizontal, 8)
+                            .font(.system(size: property.status.count > 9 ? 7 : 9, weight: .bold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .padding(.horizontal, property.status.count > 9 ? 6 : 8)
                             .padding(.vertical, 4)
                             .background(
                                 Capsule()
@@ -528,16 +534,20 @@ struct PropertyGridCell: View {
         Task {
             let newStatus = property.status == "Available" ? "Unavailable" : "Available"
             
-            // Create updated property
-            var updatedProperty = property
-            updatedProperty.status = newStatus
+            // Create update payload
+            var updates = PropertyUpdatePayload()
+            updates.status = newStatus
             
             // Update in view model
             do {
-                try await viewModel.updateProperty(updatedProperty)
+                try await viewModel.updateProperty(id: property.id, updates: updates)
+                #if DEBUG
                 print("✅ Property status toggled to: \(newStatus)")
+                #endif
             } catch {
+                #if DEBUG
                 print("❌ Failed to toggle property status:", error)
+                #endif
             }
         }
     }
@@ -546,7 +556,7 @@ struct PropertyGridCell: View {
         switch property.propertyType?.lowercased() {
         case "warehouse": return "shippingbox.fill"
         case "office": return "building.2.fill"
-        case "industrial": return "factory.fill"
+        case "industrial": return "wrench.and.screwdriver.fill"
         case "retail": return "storefront.fill"
         case "land": return "map.fill"
         case "flex": return "rectangle.3.group.fill"
@@ -566,7 +576,6 @@ struct PropertyGridCell: View {
     
     // Load base64 encoded image
     private func loadBase64Image(_ base64String: String) -> UIImage? {
-        // Remove data URI prefix if present
         var imageString = base64String
         if imageString.hasPrefix("data:image") {
             if let commaRange = imageString.range(of: ",") {
@@ -575,7 +584,6 @@ struct PropertyGridCell: View {
         }
         
         guard let imageData = Data(base64Encoded: imageString, options: .ignoreUnknownCharacters) else {
-            print("❌ Failed to decode base64 image")
             return nil
         }
         
@@ -587,20 +595,41 @@ struct PropertyMatchesSheet: View {
     let matches: [LeadPropertyMatch]
     let property: Property
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var leadViewModel: LeadViewModel
     @State private var selectedLead: Lead?
     @State private var showShareSheet = false
     @State private var leadToShare: Lead?
     @State private var expandedMatchId: String?
+    @State private var dismissedLeadIds: Set<String> = []
+    
+    // Filter out dismissed leads
+    private var visibleMatches: [LeadPropertyMatch] {
+        matches.filter { !dismissedLeadIds.contains($0.lead.id) }
+    }
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 16) {
-                    headerSection
-                    leadsList
+            ZStack {
+                // Sophisticated gradient background (deep navy to dark slate)
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.08, green: 0.12, blue: 0.20),  // Deep navy
+                        Color(red: 0.12, green: 0.14, blue: 0.18)   // Dark slate
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        headerSection
+                        leadsList
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
-                .padding()
             }
             .navigationTitle("Matched Leads")
             .navigationBarTitleDisplayMode(.inline)
@@ -609,6 +638,7 @@ struct PropertyMatchesSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundColor(.white)
                 }
             }
             .sheet(item: $selectedLead) { lead in
@@ -628,19 +658,45 @@ struct PropertyMatchesSheet: View {
     }
     
     private var headerSection: some View {
-        VStack(spacing: 8) {
-            Text("\(matches.count) Matching Leads")
-                .font(.title2.bold())
-                .foregroundColor(.primary)
-            Text("Tap any lead to view details or send property")
-                .font(.caption)
-                .foregroundColor(.secondary)
+        VStack(spacing: 12) {
+            // Count with gradient accent
+            Text("\(visibleMatches.count) Matching Lead\(visibleMatches.count == 1 ? "" : "s")")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.white, Color.white.opacity(0.9)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            
+            Text("Swipe left to dismiss • Tap to expand")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+                .tracking(0.3)
+            
+            if dismissedLeadIds.count > 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                    Text("\(dismissedLeadIds.count) lead\(dismissedLeadIds.count == 1 ? "" : "s") dismissed")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.5))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color(red: 0.4, green: 0.8, blue: 0.5).opacity(0.15))
+                )
+            }
         }
+        .padding(.vertical, 8)
     }
     
     private var leadsList: some View {
         VStack(spacing: 16) {
-            ForEach(matches) { match in
+            ForEach(visibleMatches) { match in
                 LeadMatchCard(
                     match: match,
                     property: property,
@@ -659,8 +715,96 @@ struct PropertyMatchesSheet: View {
                     },
                     onSend: {
                         leadToShare = match.lead
+                    },
+                    onDismiss: {
+                        withAnimation(.spring(response: 0.3)) {
+                            dismissedLeadIds.insert(match.lead.id)
+                            
+                            // Haptic feedback
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                        }
                     }
                 )
+            }
+            
+            // Show message if all matches dismissed - Sophisticated empty state
+            if visibleMatches.isEmpty && matches.count > 0 {
+                VStack(spacing: 20) {
+                    // Premium checkmark with gradient
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.3, green: 0.85, blue: 0.5),
+                                        Color(red: 0.2, green: 0.75, blue: 0.4)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 70, height: 70)
+                            .shadow(color: Color(red: 0.3, green: 0.85, blue: 0.5).opacity(0.3), radius: 12, x: 0, y: 6)
+                        
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.top, 20)
+                    
+                    VStack(spacing: 8) {
+                        Text("All Leads Reviewed")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                        
+                        Text("You've dismissed all matched leads for this property")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(4)
+                            .padding(.horizontal, 30)
+                    }
+                    
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            dismissedLeadIds.removeAll()
+                        }
+                        
+                        // Haptic
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.counterclockwise.circle.fill")
+                            Text("Show Dismissed Leads")
+                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.2),
+                                            Color.white.opacity(0.1)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(Color.white.opacity(0.3), lineWidth: 1.5)
+                                )
+                        )
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(.vertical, 50)
+                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -686,6 +830,10 @@ struct LeadMatchCard: View {
     let onToggle: () -> Void
     let onViewDetails: () -> Void
     let onSend: () -> Void
+    let onDismiss: () -> Void
+    
+    @State private var offset: CGFloat = 0
+    @State private var isDragging = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -694,34 +842,113 @@ struct LeadMatchCard: View {
                 expandedContent
             }
         }
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .background(
+            // Sophisticated card with subtle gradient
+            LinearGradient(
+                colors: [
+                    Color.white,
+                    Color(red: 0.98, green: 0.98, blue: 0.99)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(18)
+        // Multi-layer shadow for depth (modern iOS style)
+        .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color(white: 1.0, opacity: 0.2), lineWidth: 1)
+        )
+        .offset(x: offset)
+        .opacity(isDragging ? 0.9 : 1.0)
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    // Only allow left swipe (negative offset)
+                    if value.translation.width < 0 {
+                        isDragging = true
+                        offset = value.translation.width
+                    }
+                }
+                .onEnded { value in
+                    isDragging = false
+                    
+                    // If swiped far enough, dismiss
+                    if offset < -100 {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            offset = -500
+                        }
+                        
+                        // Haptic feedback
+                        let generator = UINotificationFeedbackGenerator()
+                        generator.notificationOccurred(.success)
+                        
+                        // Dismiss after animation
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onDismiss()
+                        }
+                    } else {
+                        // Spring back
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            offset = 0
+                        }
+                    }
+                }
+        )
+        .overlay(alignment: .trailing) {
+            // Dismiss icon appears when swiping
+            if offset < -20 {
+                HStack(spacing: 8) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                    Text("Dismiss")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .opacity(min(1.0, abs(offset) > 0 ? Double(abs(offset)) / 100.0 : 0.0))
+            }
+        }
     }
     
     private var leadCardHeader: some View {
         Button(action: onToggle) {
-            HStack(spacing: 12) {
-                // Lead Avatar/Initial
+            HStack(spacing: 14) {
+                // Premium avatar with gradient
                 ZStack {
                     Circle()
-                        .fill(Color.primaryBlue.opacity(0.15))
-                        .frame(width: 48, height: 48)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.2, green: 0.5, blue: 1.0),  // Bright blue
+                                    Color(red: 0.1, green: 0.4, blue: 0.9)   // Deep blue
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 52, height: 52)
+                        .shadow(color: Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.3), radius: 8, x: 0, y: 4)
+                    
                     Text(match.lead.name.prefix(1).uppercased())
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.primaryBlue)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
                 
-                // Lead Info
-                VStack(alignment: .leading, spacing: 4) {
+                // Lead Info with better typography
+                VStack(alignment: .leading, spacing: 5) {
                     Text(match.lead.name)
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.primary)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.black)
+                        .lineLimit(1)
                     
                     if let company = match.lead.company {
                         Text(company)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.primary.opacity(0.8))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.black.opacity(0.6))
+                            .lineLimit(1)
                     }
                 }
                 
@@ -729,32 +956,47 @@ struct LeadMatchCard: View {
                 
                 matchScoreBadge
                 
-                // Chevron
-                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                // Chevron with better styling
+                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))
                     .padding(.leading, 4)
             }
-            .padding(16)
+            .padding(18)
         }
         .buttonStyle(PlainButtonStyle())
     }
     
     private var matchScoreBadge: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 3) {
             Text("\(match.matchScore)%")
-                .font(.system(size: 18, weight: .bold))
+                .font(.system(size: 20, weight: .heavy, design: .rounded))
                 .foregroundColor(matchScoreColor)
             Text("MATCH")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(.secondary)
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundColor(matchScoreColor.opacity(0.7))
+                .tracking(0.8)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(matchScoreColor.opacity(0.12))
+            RoundedRectangle(cornerRadius: 12)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            matchScoreColor.opacity(0.15),
+                            matchScoreColor.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(matchScoreColor.opacity(0.3), lineWidth: 1.5)
+                )
         )
+        .shadow(color: matchScoreColor.opacity(0.2), radius: 6, x: 0, y: 3)
     }
     
     private var expandedContent: some View {
@@ -769,99 +1011,313 @@ struct LeadMatchCard: View {
     }
     
     private var matchReasonsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Why This Matches:")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Why This Matches")
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .foregroundColor(.black.opacity(0.5))
                 .textCase(.uppercase)
+                .tracking(1.2)
             
-            ForEach(match.matchReasons, id: \.self) { reason in
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.successGreen)
-                    Text(reason)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(match.matchReasons, id: \.self) { reason in
+                    HStack(spacing: 10) {
+                        // Premium checkmark with gradient
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.3, green: 0.85, blue: 0.5),  // Bright green
+                                            Color(red: 0.2, green: 0.75, blue: 0.4)   // Deeper green
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 22, height: 22)
+                            
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        
+                        Text(reason)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundColor(.black.opacity(0.85))
+                            .lineLimit(2)
+                    }
                 }
             }
         }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(red: 0.3, green: 0.85, blue: 0.5).opacity(0.06))
+        )
         .padding(.horizontal, 16)
     }
     
     private var leadDetailsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let email = match.lead.email, !email.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: "envelope.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.primaryBlue)
-                    Text(email)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 16) {
+            // Contact Info with modern styling
+            if let email = match.lead.email, !email.isEmpty, let phone = match.lead.phone, !phone.isEmpty {
+                VStack(spacing: 10) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.12))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))
+                        }
+                        
+                        Text(email)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundColor(.black.opacity(0.75))
+                            .lineLimit(1)
+                        
+                        Spacer()
+                    }
+                    
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(red: 0.3, green: 0.85, blue: 0.5).opacity(0.12))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "phone.fill")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(red: 0.3, green: 0.85, blue: 0.5))
+                        }
+                        
+                        Text(phone)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundColor(.black.opacity(0.75))
+                        
+                        Spacer()
+                    }
                 }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.02))
+                )
+                .padding(.horizontal, 16)
+                
+                Divider()
+                    .padding(.horizontal, 16)
             }
             
-            if let phone = match.lead.phone, !phone.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: "phone.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.primaryBlue)
-                    Text(phone)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+            // Lead Requirements with premium styling
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Lead Requirements")
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .foregroundColor(.black.opacity(0.5))
+                    .textCase(.uppercase)
+                    .tracking(1.2)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    if let budget = match.lead.budget, !budget.isEmpty {
+                        requirementRow(
+                            icon: "dollarsign.circle.fill",
+                            iconColor: Color(red: 0.3, green: 0.85, blue: 0.5),
+                            label: "Budget",
+                            value: budget
+                        )
+                    }
+                    
+                    if let sizeMin = match.lead.sizeMin, let sizeMax = match.lead.sizeMax, !sizeMin.isEmpty, !sizeMax.isEmpty {
+                        requirementRow(
+                            icon: "ruler.fill",
+                            iconColor: Color(red: 0.2, green: 0.5, blue: 1.0),
+                            label: "Size",
+                            value: "\(formatNumber(sizeMin)) - \(formatNumber(sizeMax)) SF"
+                        )
+                    } else if let sizeMin = match.lead.sizeMin, !sizeMin.isEmpty {
+                        requirementRow(
+                            icon: "ruler.fill",
+                            iconColor: Color(red: 0.2, green: 0.5, blue: 1.0),
+                            label: "Size",
+                            value: "\(formatNumber(sizeMin))+ SF"
+                        )
+                    }
+                    
+                    if let timeline = match.lead.timelineStatus {
+                        requirementRow(
+                            icon: "clock.fill",
+                            iconColor: timelineColor(timeline),
+                            label: "Timeline",
+                            value: timeline
+                        )
+                    }
+                    
+                    // Lead Status
+                    requirementRow(
+                        icon: statusIcon(match.lead.status),
+                        iconColor: statusColor(match.lead.status),
+                        label: "Status",
+                        value: match.lead.status
+                    )
                 }
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.black.opacity(0.02))
+            )
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 16)
+    }
+    
+    private func requirementRow(icon: String, iconColor: Color, label: String, value: String) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.12))
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(iconColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundColor(.black.opacity(0.5))
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                
+                Text(value)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundColor(.black)
+            }
+            
+            Spacer()
+        }
+    }
+    
+    private func formatNumber(_ value: String) -> String {
+        guard let number = Int(value) else { return value }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: number)) ?? value
+    }
+    
+    private func timelineColor(_ timeline: String) -> Color {
+        switch timeline {
+        case "Immediate": return Color(red: 1.0, green: 0.3, blue: 0.3)     // Vibrant red
+        case "Heating Up": return Color(red: 1.0, green: 0.6, blue: 0.2)   // Warm orange
+        case "Upcoming": return Color(red: 0.2, green: 0.5, blue: 1.0)     // Bright blue
+        default: return Color.gray
+        }
+    }
+    
+    private func statusColor(_ status: String) -> Color {
+        switch status {
+        case "Cold": return Color(red: 0.4, green: 0.7, blue: 1.0)         // Cool blue
+        case "Warm": return Color(red: 1.0, green: 0.6, blue: 0.2)        // Warm orange
+        case "Hot": return Color(red: 1.0, green: 0.3, blue: 0.3)         // Hot red
+        case "Closed": return Color(red: 0.3, green: 0.85, blue: 0.5)     // Success green
+        default: return Color.gray
+        }
+    }
+    
+    private func statusIcon(_ status: String) -> String {
+        switch status {
+        case "Cold": return "snowflake"
+        case "Warm": return "flame"
+        case "Hot": return "flame.fill"
+        case "Closed": return "checkmark.circle.fill"
+        default: return "circle"
+        }
     }
     
     private var actionButtons: some View {
-        HStack(spacing: 12) {
-            Button(action: onViewDetails) {
-                HStack {
-                    Image(systemName: "person.circle")
-                    Text("View Details")
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // View Details - Elegant secondary button
+                Button(action: onViewDetails) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 16))
+                        Text("View")
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                    }
+                    .foregroundColor(Color(red: 0.2, green: 0.5, blue: 1.0))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.2), lineWidth: 1)
+                            )
+                    )
                 }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.primaryBlue)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.primaryBlue.opacity(0.1))
-                )
+                
+                // Send Property - Premium gradient button
+                Button(action: onSend) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 16))
+                        Text("Send")
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.2, green: 0.5, blue: 1.0),
+                                        Color(red: 0.1, green: 0.4, blue: 0.9)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.4), radius: 8, x: 0, y: 4)
+                    )
+                }
             }
             
-            Button(action: onSend) {
-                HStack {
-                    Image(systemName: "paperplane.fill")
-                    Text("Send Property")
+            // Dismiss button - Subtle but clear
+            Button(action: onDismiss) {
+                HStack(spacing: 8) {
+                    Image(systemName: "hand.thumbsdown.fill")
+                        .font(.system(size: 14))
+                    Text("Not a Good Fit")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                 }
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black.opacity(0.5))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(
-                    LinearGradient(
-                        colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+                        )
                 )
-                .cornerRadius(10)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, 12)
+        .padding(.bottom, 16)
     }
     
     private var matchScoreColor: Color {
         switch match.matchScore {
-        case 80...100: return .successGreen
-        case 60..<80: return .primaryBlue
-        case 40..<60: return .orange
-        default: return .secondary
+        case 80...100: return Color(red: 0.3, green: 0.85, blue: 0.5)  // Vibrant green
+        case 60..<80: return Color(red: 0.2, green: 0.5, blue: 1.0)    // Bright blue
+        case 40..<60: return Color(red: 1.0, green: 0.6, blue: 0.2)    // Warm orange
+        default: return Color.gray
         }
     }
 }

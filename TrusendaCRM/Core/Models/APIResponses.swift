@@ -87,3 +87,23 @@ struct ErrorResponse: Codable {
     let details: String?
 }
 
+// MARK: - User Settings Responses
+
+/// Response from GET /user-settings
+struct UserSettingsResponse: Codable {
+    let calendar_booking_url: String?
+    let email: String?
+    let name: String?
+}
+
+/// Request for PATCH /user-settings
+struct UserSettingsUpdateRequest: Codable {
+    let calendar_booking_url: String?
+}
+
+/// Response from PATCH /user-settings
+struct UserSettingsUpdateResponse: Codable {
+    let success: Bool
+    let calendar_booking_url: String?
+}
+

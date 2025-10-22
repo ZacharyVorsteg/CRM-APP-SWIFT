@@ -29,30 +29,42 @@ struct PropertyShareSheet: View {
         return "https://trusenda.com/property/\(sanitizedPropertyID)?leadId=\(lead.id)&leadName=\(lead.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")\(lead.email != nil ? "&leadEmail=\(lead.email!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.phone != nil ? "&leadPhone=\(lead.phone!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")\(lead.company != nil ? "&leadCompany=\(lead.company!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" : "")"
     }
     
-    // Share message for leads
+    // Share message for leads - Branded with Trusenda
     private var shareText: String {
-        var text = "🏢 Check out this property that might be perfect for you:\n\n"
-        text += "\(property.title)\n"
+        var text = "━━━━━━━━━━━━━━━━━━━━━\n"
+        text += "🏢 TRUSENDA\n"
+        text += "Professional CRM\n"
+        text += "trusenda.com\n"
+        text += "━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        text += "Check out this property that might be perfect for you:\n\n"
+        text += "📍 \(property.title)\n"
         
         if let address = property.address {
-            text += "📍 \(address)"
+            text += "   \(address)"
             if let city = property.city, let state = property.state {
                 text += ", \(city), \(state)"
             }
             text += "\n\n"
         }
         
+        text += "PROPERTY DETAILS:\n"
         if let propertyType = property.propertyType {
-            text += "Type: \(propertyType)\n"
+            text += "• Type: \(propertyType)\n"
         }
         if let sizeMin = property.sizeMin, let sizeMax = property.sizeMax {
-            text += "Size: \(formatNumber(sizeMin)) - \(formatNumber(sizeMax)) SF\n"
+            text += "• Size: \(formatNumber(sizeMin)) - \(formatNumber(sizeMax)) SF\n"
         }
         if let budget = property.budget {
-            text += "Price: \(budget)\n"
+            text += "• Price: \(budget)\n"
         }
         
-        text += "\n👀 View full details with photos:\n\(propertyURL)\n"
+        text += "\n👀 View full details with photos:\n"
+        text += "\(propertyURL)\n\n"
+        text += "━━━━━━━━━━━━━━━━━━━━━\n"
+        text += "Sent via Trusenda CRM\n"
+        text += "Commercial Real Estate\n"
+        text += "━━━━━━━━━━━━━━━━━━━━━"
         
         return text
     }

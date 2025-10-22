@@ -47,6 +47,7 @@ struct AddPropertyView: View {
     ]
     
     let sizeRangeOptions = [
+        ("0-1000", "Less than 1,000 SF"),
         ("1000-2500", "1,000 - 2,500 SF"),
         ("2500-5000", "2,500 - 5,000 SF"),
         ("5000-10000", "5,000 - 10,000 SF"),
@@ -115,48 +116,88 @@ struct AddPropertyView: View {
                         )
                     }
                     
-                    // Address
-                    HStack(spacing: 8) {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundColor(.primaryBlue)
-                            .font(.system(size: 18))
-                            .frame(width: 24)
-                        TextField("Address", text: $address)
-                            .font(.body)
+                    // Address - Required
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundColor(.primaryBlue)
+                                .font(.system(size: 18))
+                                .frame(width: 24)
+                            TextField("Street Address", text: $address)
+                                .font(.body)
+                            Text("*")
+                                .foregroundColor(.errorRed)
+                                .font(.title.bold())
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(UIColor.secondarySystemBackground))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            address.isEmpty ? Color.errorRed.opacity(0.3) : Color.primaryBlue.opacity(0.2),
+                                            lineWidth: 1
+                                        )
+                                )
+                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                        )
                     }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(UIColor.secondarySystemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
-                    )
                     
-                    // City, State, Zip (compact row)
-                    HStack(spacing: 8) {
-                        TextField("City", text: $city)
-                            .font(.body)
-                        TextField("State", text: $state)
-                            .font(.body)
-                            .frame(maxWidth: 60)
-                        TextField("Zip", text: $zipCode)
-                            .font(.body)
-                            .frame(maxWidth: 80)
-                            .keyboardType(.numberPad)
+                    // City, State, Zip - All Required
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            TextField("City", text: $city)
+                                .font(.body)
+                            Text("*")
+                                .foregroundColor(.errorRed)
+                                .font(.title.bold())
+                                .frame(width: 10)
+                            
+                            TextField("ST", text: $state)
+                                .font(.body)
+                                .frame(maxWidth: 60)
+                                .textInputAutocapitalization(.characters)
+                            Text("*")
+                                .foregroundColor(.errorRed)
+                                .font(.title.bold())
+                                .frame(width: 10)
+                            
+                            TextField("Zip", text: $zipCode)
+                                .font(.body)
+                                .frame(maxWidth: 80)
+                                .keyboardType(.numberPad)
+                            Text("*")
+                                .foregroundColor(.errorRed)
+                                .font(.title.bold())
+                                .frame(width: 10)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(UIColor.secondarySystemBackground))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            (city.isEmpty || state.isEmpty || zipCode.isEmpty) 
+                                                ? Color.errorRed.opacity(0.3) 
+                                                : Color.primaryBlue.opacity(0.2),
+                                            lineWidth: 1
+                                        )
+                                )
+                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                        )
+                        
+                        if !isValidZipCode(zipCode) && !zipCode.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 10))
+                                Text("Please enter a valid 5-digit zip code")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.warningOrange)
+                        }
                     }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(UIColor.secondarySystemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
-                    )
                 } header: {
                     Label("PROPERTY LOCATION", systemImage: "location.fill")
                         .font(.system(size: 13, weight: .heavy))
@@ -166,16 +207,22 @@ struct AddPropertyView: View {
                 }
                 
                 Section {
-                    // Property Type
-                    Picker("Property Type", selection: $propertyType) {
-                        Text("Select property type").tag("").foregroundColor(.secondary)
-                        ForEach(propertyTypes, id: \.self) { type in
-                            Text(type).tag(type)
+                    // Property Type - Required
+                    HStack {
+                        Picker("Property Type", selection: $propertyType) {
+                            Text("Select property type").tag("").foregroundColor(.secondary)
+                            ForEach(propertyTypes, id: \.self) { type in
+                                Text(type).tag(type)
+                            }
                         }
+                        .tint(propertyType.isEmpty ? .errorRed : .primaryBlue)
+                        
+                        Text("*")
+                            .foregroundColor(.errorRed)
+                            .font(.title.bold())
                     }
-                    .tint(.primaryBlue)
                     
-                    // Transaction Type
+                    // Transaction Type (defaults to Lease, always has value)
                     Picker("Transaction Type", selection: $transactionType) {
                         ForEach(transactionTypes, id: \.self) { type in
                             Text(type).tag(type)
@@ -183,35 +230,47 @@ struct AddPropertyView: View {
                     }
                     .tint(.primaryBlue)
                     
-                    // Size Range
-                    Picker("Size Range (SF)", selection: $sizeRange) {
-                        Text("Select size...").tag("")
-                        ForEach(sizeRangeOptions, id: \.0) { value, label in
-                            Text(label).tag(value)
+                    // Size Range - Required for matching
+                    HStack {
+                        Picker("Size Range (SF)", selection: $sizeRange) {
+                            Text("Select size...").tag("")
+                            ForEach(sizeRangeOptions, id: \.0) { value, label in
+                                Text(label).tag(value)
+                            }
                         }
-                    }
-                    .tint(.primaryBlue)
-                    .onChange(of: sizeRange) { newValue in
-                        if newValue.contains("-") {
-                            let parts = newValue.split(separator: "-")
-                            sizeMin = String(parts[0])
-                            sizeMax = String(parts[1])
-                        } else if newValue.contains("+") {
-                            sizeMin = newValue.replacingOccurrences(of: "+", with: "")
-                            sizeMax = ""
+                        .tint(sizeRange.isEmpty ? .errorRed : .primaryBlue)
+                        .onChange(of: sizeRange) { newValue in
+                            if newValue.contains("-") {
+                                let parts = newValue.split(separator: "-")
+                                sizeMin = String(parts[0])
+                                sizeMax = String(parts[1])
+                            } else if newValue.contains("+") {
+                                sizeMin = newValue.replacingOccurrences(of: "+", with: "")
+                                sizeMax = ""
+                            }
                         }
+                        
+                        Text("*")
+                            .foregroundColor(.errorRed)
+                            .font(.title.bold())
                     }
                     
-                    // Price/Budget
-                    Picker("Price Range", selection: $budget) {
-                        Text("Select price range...").tag("")
-                        ForEach(budgetOptions, id: \.self) { option in
-                            Text(option).tag(option)
+                    // Price/Budget - Required for matching
+                    HStack {
+                        Picker("Price Range", selection: $budget) {
+                            Text("Select price range...").tag("")
+                            ForEach(budgetOptions, id: \.self) { option in
+                                Text(option).tag(option)
+                            }
                         }
+                        .tint(budget.isEmpty ? .errorRed : .primaryBlue)
+                        
+                        Text("*")
+                            .foregroundColor(.errorRed)
+                            .font(.title.bold())
                     }
-                    .tint(.primaryBlue)
                     
-                    // Lease Term
+                    // Lease Term (optional but recommended)
                     Picker("Lease Term", selection: $leaseTerm) {
                         Text("Select term...").tag("")
                         ForEach(leaseTermOptions, id: \.self) { option in
@@ -220,20 +279,30 @@ struct AddPropertyView: View {
                     }
                     .tint(.primaryBlue)
                     
-                    // Best Suited Industry
-                    Picker("Best Suited For", selection: $industry) {
-                        Text("Select industry...").tag("")
-                        ForEach(industryOptions, id: \.self) { option in
-                            Text(option).tag(option)
+                    // Best Suited Industry - Required for matching
+                    HStack {
+                        Picker("Best Suited For", selection: $industry) {
+                            Text("Select industry...").tag("")
+                            ForEach(industryOptions, id: \.self) { option in
+                                Text(option).tag(option)
+                            }
                         }
+                        .tint(industry.isEmpty ? .errorRed : .primaryBlue)
+                        
+                        Text("*")
+                            .foregroundColor(.errorRed)
+                            .font(.title.bold())
                     }
-                    .tint(.primaryBlue)
                 } header: {
-                    Label("PROPERTY DETAILS", systemImage: "building.2.fill")
+                    Label("PROPERTY DETAILS (REQUIRED FOR MATCHING)", systemImage: "building.2.fill")
                         .font(.system(size: 13, weight: .heavy))
                         .foregroundColor(.primaryBlue)
                         .textCase(.uppercase)
                         .tracking(1.0)
+                } footer: {
+                    Text("Complete property details ensure accurate matching with potential leads")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 
                 Section {
@@ -373,11 +442,37 @@ struct AddPropertyView: View {
                                 .shadow(color: Color.primaryBlue.opacity(0.3), radius: 8, x: 0, y: 4)
                         )
                     }
-                    .disabled(title.isEmpty || isSubmitting)
+                    .disabled(!isFormValid || isSubmitting)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.horizontal)
                     .padding(.top, 8)
+                    
+                    // Validation errors summary
+                    if !isFormValid && hasInteractedWithForm {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Please complete required fields:")
+                                .font(.caption.bold())
+                                .foregroundColor(.errorRed)
+                            
+                            ForEach(validationErrors, id: \.self) { error in
+                                HStack(spacing: 6) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 10))
+                                    Text(error)
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.errorRed.opacity(0.1))
+                        )
+                        .listRowBackground(Color.clear)
+                        .padding(.horizontal)
+                    }
                 }
             }
             .navigationTitle("Add Property")
@@ -398,26 +493,79 @@ struct AddPropertyView: View {
         }
     }
     
+    // MARK: - Validation
+    
+    private var isFormValid: Bool {
+        !title.isEmpty &&
+        !address.isEmpty &&
+        !city.isEmpty &&
+        !state.isEmpty &&
+        isValidZipCode(zipCode) &&
+        !propertyType.isEmpty &&
+        !sizeRange.isEmpty &&
+        !budget.isEmpty &&
+        !industry.isEmpty
+    }
+    
+    private var hasInteractedWithForm: Bool {
+        // Show errors only after user has started filling the form
+        !title.isEmpty || !address.isEmpty || !city.isEmpty
+    }
+    
+    private var validationErrors: [String] {
+        var errors: [String] = []
+        
+        if title.isEmpty { errors.append("Property title") }
+        if address.isEmpty { errors.append("Street address") }
+        if city.isEmpty { errors.append("City") }
+        if state.isEmpty { errors.append("State") }
+        if zipCode.isEmpty { errors.append("Zip code") }
+        else if !isValidZipCode(zipCode) { errors.append("Valid zip code (5 digits)") }
+        if propertyType.isEmpty { errors.append("Property type") }
+        if sizeRange.isEmpty { errors.append("Size range") }
+        if budget.isEmpty { errors.append("Price range") }
+        if industry.isEmpty { errors.append("Best suited industry") }
+        
+        return errors
+    }
+    
+    private func isValidZipCode(_ zip: String) -> Bool {
+        // US zip code: 5 digits
+        let zipRegex = "^[0-9]{5}$"
+        let zipPredicate = NSPredicate(format: "SELF MATCHES %@", zipRegex)
+        return zipPredicate.evaluate(with: zip)
+    }
+    
     private func submitProperty() async {
-        guard !title.isEmpty else { return }
+        // Final validation before submit
+        guard isFormValid else {
+            errorMessage = "Please complete all required fields"
+            showError = true
+            
+            // Error haptic
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+            return
+        }
         
         isSubmitting = true
         
+        // All required fields are guaranteed to be filled by validation
         let payload = PropertyCreatePayload(
             title: title,
-            address: address.isEmpty ? nil : address,
-            city: city.isEmpty ? nil : city,
-            state: state.isEmpty ? nil : state,
-            zipCode: zipCode.isEmpty ? nil : zipCode,
-            propertyType: propertyType.isEmpty ? nil : propertyType,
-            transactionType: transactionType.isEmpty ? nil : transactionType,
+            address: address, // Required
+            city: city, // Required
+            state: state.uppercased(), // Required - uppercase for consistency
+            zipCode: zipCode, // Required and validated
+            propertyType: propertyType, // Required
+            transactionType: transactionType, // Required (defaults to Lease)
             size: nil,
-            sizeMin: sizeMin.isEmpty ? nil : sizeMin,
-            sizeMax: sizeMax.isEmpty ? nil : sizeMax,
+            sizeMin: sizeMin, // Required (set from sizeRange)
+            sizeMax: sizeMax.isEmpty ? nil : sizeMax, // May be empty for "50000+"
             price: price.isEmpty ? nil : price,
-            budget: budget.isEmpty ? nil : budget,
+            budget: budget, // Required
             leaseTerm: leaseTerm.isEmpty ? nil : leaseTerm,
-            industry: industry.isEmpty ? nil : industry,
+            industry: industry, // Required
             availableDate: availableDate.isEmpty ? nil : availableDate,
             images: imageDataStrings.isEmpty ? nil : imageDataStrings,
             primaryImage: imageDataStrings.first,

@@ -44,6 +44,9 @@ enum Endpoint {
     case properties
     case property(id: String)
     
+    // User Settings
+    case userSettings
+    
     var url: URL? {
         switch self {
         case .login:
@@ -86,6 +89,8 @@ enum Endpoint {
             return URL(string: "\(Endpoint.functionsBase)/properties")
         case .property(let id):
             return URL(string: "\(Endpoint.functionsBase)/properties/\(id)")
+        case .userSettings:
+            return URL(string: "\(Endpoint.functionsBase)/user-settings")
         }
     }
 }

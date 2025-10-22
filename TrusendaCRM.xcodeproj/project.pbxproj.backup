@@ -1,0 +1,625 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		APP001 /* TrusendaCRMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE001 /* TrusendaCRMApp.swift */; };
+		APP002 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE002 /* APIClient.swift */; };
+		APP003 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE003 /* AuthManager.swift */; };
+		APP004 /* Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE004 /* Endpoints.swift */; };
+		APP005 /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE005 /* NetworkError.swift */; };
+		APP006 /* Lead.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE006 /* Lead.swift */; };
+		APP007 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE007 /* User.swift */; };
+		APP008 /* TenantInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE008 /* TenantInfo.swift */; };
+		APP009 /* APIResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE009 /* APIResponses.swift */; };
+		APP010 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE010 /* KeychainManager.swift */; };
+		APP011 /* PhoneFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE011 /* PhoneFormatter.swift */; };
+		APP012 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE012 /* Validation.swift */; };
+		APP013 /* DateFormatter+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE013 /* DateFormatter+Extensions.swift */; };
+		APP014 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE014 /* AuthViewModel.swift */; };
+		APP015 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE015 /* LoginView.swift */; };
+		APP016 /* LeadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE016 /* LeadViewModel.swift */; };
+		APP017 /* LeadListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE017 /* LeadListView.swift */; };
+		APP018 /* AddLeadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE018 /* AddLeadView.swift */; };
+		APP019 /* LeadDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE019 /* LeadDetailView.swift */; };
+		APP020 /* FollowUpListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE020 /* FollowUpListView.swift */; };
+		APP021 /* RecentActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE021 /* RecentActivityView.swift */; };
+		APP022 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE022 /* SettingsViewModel.swift */; };
+		PROPERTY001 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYMODEL /* Property.swift */; };
+		PROPERTY002 /* PropertyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYVM /* PropertyViewModel.swift */; };
+		PROPERTY003 /* PropertiesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYLIST /* PropertiesListView.swift */; };
+		PROPERTY004 /* AddPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYADD /* AddPropertyView.swift */; };
+		PROPERTY005 /* PropertyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYDETAIL /* PropertyDetailView.swift */; };
+		PROPERTY006 /* EditPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYEDIT /* EditPropertyView.swift */; };
+		PROPERTY007 /* PropertyShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYSHARE /* PropertyShareSheet.swift */; };
+		ASSETS001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ASSETSREF /* Assets.xcassets */; };
+		COLORTHEME001 /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = COLORTHEMEFILE /* Color+Theme.swift */; };
+		CONSTANTS001 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONSTANTSFILE /* AppConstants.swift */; };
+		CONTACTS001 /* ContactsPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONTACTSFILE /* ContactsPickerView.swift */; };
+		FEEDBACK001 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEDBACKFILE /* FeedbackView.swift */; };
+		FULLLEGAL001 /* FullLegalDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FULLLEGALFILE /* FullLegalDocumentView.swift */; };
+		LEGAL001 /* LegalDocuments.swift in Sources */ = {isa = PBXBuildFile; fileRef = LEGALFILE /* LegalDocuments.swift */; };
+		LEGALDOC001 /* LegalDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LEGALDOCFILE /* LegalDocumentView.swift */; };
+		NOTIFICATIONS001 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = NOTIFICATIONSFILE /* NotificationsView.swift */; };
+		PLACEHOLDER001 /* View+Placeholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLACEHOLDERFILE /* View+Placeholder.swift */; };
+		SETTINGS001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETTINGSFILE /* SettingsView.swift */; };
+		SPLASH001 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SPLASHFILE /* SplashScreenView.swift */; };
+		TIMEZONE001 /* TimezonePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TIMEZONEFILE /* TimezonePickerView.swift */; };
+		WELCOME001 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WELCOMEFILE /* WelcomeView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		ASSETSREF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		COLORTHEMEFILE /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
+		CONSTANTSFILE /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
+		CONTACTSFILE /* ContactsPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsPickerView.swift; sourceTree = "<group>"; };
+		FEEDBACKFILE /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
+		FILE001 /* TrusendaCRMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrusendaCRMApp.swift; sourceTree = "<group>"; };
+		FILE002 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		FILE003 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		FILE004 /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
+		FILE005 /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
+		FILE006 /* Lead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lead.swift; sourceTree = "<group>"; };
+		FILE007 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		FILE008 /* TenantInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenantInfo.swift; sourceTree = "<group>"; };
+		FILE009 /* APIResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponses.swift; sourceTree = "<group>"; };
+		FILE010 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		FILE011 /* PhoneFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneFormatter.swift; sourceTree = "<group>"; };
+		FILE012 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
+		FILE013 /* DateFormatter+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DateFormatter+Extensions.swift"; sourceTree = "<group>"; };
+		FILE014 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		FILE015 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		FILE016 /* LeadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadViewModel.swift; sourceTree = "<group>"; };
+		FILE017 /* LeadListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadListView.swift; sourceTree = "<group>"; };
+		FILE018 /* AddLeadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddLeadView.swift; sourceTree = "<group>"; };
+		FILE019 /* LeadDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeadDetailView.swift; sourceTree = "<group>"; };
+		FILE020 /* FollowUpListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpListView.swift; sourceTree = "<group>"; };
+		FILE021 /* RecentActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivityView.swift; sourceTree = "<group>"; };
+		FILE022 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		PROPERTYMODEL /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
+		PROPERTYVM /* PropertyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyViewModel.swift; sourceTree = "<group>"; };
+		PROPERTYLIST /* PropertiesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesListView.swift; sourceTree = "<group>"; };
+		PROPERTYADD /* AddPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPropertyView.swift; sourceTree = "<group>"; };
+		PROPERTYDETAIL /* PropertyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailView.swift; sourceTree = "<group>"; };
+		PROPERTYEDIT /* EditPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPropertyView.swift; sourceTree = "<group>"; };
+		PROPERTYSHARE /* PropertyShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyShareSheet.swift; sourceTree = "<group>"; };
+		FULLLEGALFILE /* FullLegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullLegalDocumentView.swift; sourceTree = "<group>"; };
+		INFOPLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		LEGALDOCFILE /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
+		LEGALFILE /* LegalDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocuments.swift; sourceTree = "<group>"; };
+		NOTIFICATIONSFILE /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		PLACEHOLDERFILE /* View+Placeholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Placeholder.swift"; sourceTree = "<group>"; };
+		PRODUCT001 /* TrusendaCRM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrusendaCRM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		SETTINGSFILE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		SPLASHFILE /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		TIMEZONEFILE /* TimezonePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimezonePickerView.swift; sourceTree = "<group>"; };
+		WELCOMEFILE /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FRAMEWORKS001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		APPGROUP /* TrusendaCRM */ = {
+			isa = PBXGroup;
+			children = (
+				FILE001 /* TrusendaCRMApp.swift */,
+				INFOPLIST /* Info.plist */,
+				ASSETSREF /* Assets.xcassets */,
+				COREGROUP /* Core */,
+				FEATURESGROUP /* Features */,
+				SHAREDGROUP /* Shared */,
+			);
+			path = TrusendaCRM;
+			sourceTree = "<group>";
+		};
+		AUTHGROUP /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				FILE014 /* AuthViewModel.swift */,
+				FILE015 /* LoginView.swift */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		COREGROUP /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				NETWORKGROUP /* Network */,
+				MODELSGROUP /* Models */,
+				STORAGEGROUP /* Storage */,
+				UTILGROUP /* Utilities */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		EXTENSIONSGROUP /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				COLORTHEMEFILE /* Color+Theme.swift */,
+				PLACEHOLDERFILE /* View+Placeholder.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		FEATURESGROUP /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				AUTHGROUP /* Authentication */,
+				LEADSGROUP /* Leads */,
+				PROPERTIESGROUP /* Properties */,
+				FOLLOWUPSGROUP /* FollowUps */,
+				ACTIVITYGROUP /* Activity */,
+				SETTINGSGROUP /* Settings */,
+				ONBOARDINGGROUP /* Onboarding */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		ACTIVITYGROUP /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				FILE021 /* RecentActivityView.swift */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
+		PROPERTIESGROUP /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+				PROPERTYVM /* PropertyViewModel.swift */,
+				PROPERTYLIST /* PropertiesListView.swift */,
+				PROPERTYADD /* AddPropertyView.swift */,
+				PROPERTYEDIT /* EditPropertyView.swift */,
+				PROPERTYDETAIL /* PropertyDetailView.swift */,
+				PROPERTYSHARE /* PropertyShareSheet.swift */,
+			);
+			path = Properties;
+			sourceTree = "<group>";
+		};
+		FOLLOWUPSGROUP /* FollowUps */ = {
+			isa = PBXGroup;
+			children = (
+				FILE020 /* FollowUpListView.swift */,
+			);
+			path = FollowUps;
+			sourceTree = "<group>";
+		};
+		LEADSGROUP /* Leads */ = {
+			isa = PBXGroup;
+			children = (
+				FILE016 /* LeadViewModel.swift */,
+				FILE017 /* LeadListView.swift */,
+				FILE018 /* AddLeadView.swift */,
+				FILE019 /* LeadDetailView.swift */,
+				CONTACTSFILE /* ContactsPickerView.swift */,
+			);
+			path = Leads;
+			sourceTree = "<group>";
+		};
+		MAINGROUP = {
+			isa = PBXGroup;
+			children = (
+				APPGROUP /* TrusendaCRM */,
+				PRODUCTSGROUP /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		MODELSGROUP /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FILE006 /* Lead.swift */,
+				PROPERTYMODEL /* Property.swift */,
+				FILE007 /* User.swift */,
+				FILE008 /* TenantInfo.swift */,
+				FILE009 /* APIResponses.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		NETWORKGROUP /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				FILE002 /* APIClient.swift */,
+				FILE003 /* AuthManager.swift */,
+				FILE004 /* Endpoints.swift */,
+				FILE005 /* NetworkError.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		ONBOARDINGGROUP /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				WELCOMEFILE /* WelcomeView.swift */,
+				SPLASHFILE /* SplashScreenView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		PRODUCTSGROUP /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				PRODUCT001 /* TrusendaCRM.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		SETTINGSGROUP /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				SETTINGSFILE /* SettingsView.swift */,
+				FILE022 /* SettingsViewModel.swift */,
+				FEEDBACKFILE /* FeedbackView.swift */,
+				TIMEZONEFILE /* TimezonePickerView.swift */,
+				NOTIFICATIONSFILE /* NotificationsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		SHAREDGROUP /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				EXTENSIONSGROUP /* Extensions */,
+				VIEWSGROUP /* Views */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		STORAGEGROUP /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				FILE010 /* KeychainManager.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		UTILGROUP /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				FILE011 /* PhoneFormatter.swift */,
+				FILE012 /* Validation.swift */,
+				FILE013 /* DateFormatter+Extensions.swift */,
+				CONSTANTSFILE /* AppConstants.swift */,
+				LEGALFILE /* LegalDocuments.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		VIEWSGROUP /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				LEGALDOCFILE /* LegalDocumentView.swift */,
+				FULLLEGALFILE /* FullLegalDocumentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		TARGET001 /* TrusendaCRM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CONFIGLIST002 /* Build configuration list for PBXNativeTarget "TrusendaCRM" */;
+			buildPhases = (
+				SOURCES001 /* Sources */,
+				FRAMEWORKS001 /* Frameworks */,
+				RESOURCES001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TrusendaCRM;
+			productName = TrusendaCRM;
+			productReference = PRODUCT001 /* TrusendaCRM.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PROJECT001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					TARGET001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = CONFIGLIST001 /* Build configuration list for PBXProject "TrusendaCRM" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = MAINGROUP;
+			productRefGroup = PRODUCTSGROUP /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				TARGET001 /* TrusendaCRM */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		RESOURCES001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ASSETS001 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		SOURCES001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				APP001 /* TrusendaCRMApp.swift in Sources */,
+				APP002 /* APIClient.swift in Sources */,
+				APP003 /* AuthManager.swift in Sources */,
+				APP004 /* Endpoints.swift in Sources */,
+				APP005 /* NetworkError.swift in Sources */,
+				APP006 /* Lead.swift in Sources */,
+				APP007 /* User.swift in Sources */,
+				APP008 /* TenantInfo.swift in Sources */,
+				APP009 /* APIResponses.swift in Sources */,
+				APP010 /* KeychainManager.swift in Sources */,
+				APP011 /* PhoneFormatter.swift in Sources */,
+				APP012 /* Validation.swift in Sources */,
+				APP013 /* DateFormatter+Extensions.swift in Sources */,
+				APP014 /* AuthViewModel.swift in Sources */,
+				APP015 /* LoginView.swift in Sources */,
+				APP016 /* LeadViewModel.swift in Sources */,
+				APP017 /* LeadListView.swift in Sources */,
+				APP018 /* AddLeadView.swift in Sources */,
+				APP019 /* LeadDetailView.swift in Sources */,
+				APP020 /* FollowUpListView.swift in Sources */,
+				APP021 /* RecentActivityView.swift in Sources */,
+				APP022 /* SettingsViewModel.swift in Sources */,
+				PROPERTY001 /* Property.swift in Sources */,
+				PROPERTY002 /* PropertyViewModel.swift in Sources */,
+				PROPERTY003 /* PropertiesListView.swift in Sources */,
+				PROPERTY004 /* AddPropertyView.swift in Sources */,
+				PROPERTY005 /* PropertyDetailView.swift in Sources */,
+				PROPERTY006 /* EditPropertyView.swift in Sources */,
+				PROPERTY007 /* PropertyShareSheet.swift in Sources */,
+				COLORTHEME001 /* Color+Theme.swift in Sources */,
+				SETTINGS001 /* SettingsView.swift in Sources */,
+				WELCOME001 /* WelcomeView.swift in Sources */,
+				SPLASH001 /* SplashScreenView.swift in Sources */,
+				CONSTANTS001 /* AppConstants.swift in Sources */,
+				CONTACTS001 /* ContactsPickerView.swift in Sources */,
+				LEGAL001 /* LegalDocuments.swift in Sources */,
+				FEEDBACK001 /* FeedbackView.swift in Sources */,
+				PLACEHOLDER001 /* View+Placeholder.swift in Sources */,
+				LEGALDOC001 /* LegalDocumentView.swift in Sources */,
+				FULLLEGAL001 /* FullLegalDocumentView.swift in Sources */,
+				TIMEZONE001 /* TimezonePickerView.swift in Sources */,
+				NOTIFICATIONS001 /* NotificationsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DEBUG001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		RELEASE001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		TARGETDEBUG001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8746VPZ8R9;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = TrusendaCRM/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.trusenda.crm;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		TARGETRELEASE001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8746VPZ8R9;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = TrusendaCRM/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.trusenda.crm;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CONFIGLIST001 /* Build configuration list for PBXProject "TrusendaCRM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEBUG001 /* Debug */,
+				RELEASE001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CONFIGLIST002 /* Build configuration list for PBXNativeTarget "TrusendaCRM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TARGETDEBUG001 /* Debug */,
+				TARGETRELEASE001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PROJECT001 /* Project object */;
+}

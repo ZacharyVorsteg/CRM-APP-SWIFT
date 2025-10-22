@@ -145,6 +145,12 @@ struct SettingsView: View {
     @State private var isRefreshingAfterPayment = false
     @State private var showPaymentSuccessAlert = false
     @State private var showFeedback = false
+    @State private var calendarBookingURL = ""
+    @State private var isLoadingCalendarSettings = true
+    @State private var isSavingCalendarURL = false
+    @State private var showCalendarSaveSuccess = false
+    @State private var showCalendarGuide = false
+    @State private var calendarSaveAttempts = 0
     
     var body: some View {
         NavigationView {
@@ -230,6 +236,162 @@ struct SettingsView: View {
                             }
                         }
                     }
+                }
+                
+                // Calendar Booking Integration - NEW!
+                Section {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack {
+                            Image(systemName: "calendar.badge.clock")
+                                .foregroundColor(.primaryBlue)
+                                .font(.system(size: 22))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Instant Tour Booking")
+                                    .font(.headline)
+                                Text("Let leads book tours directly when they're interested")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            
+                            // Info button
+                            Button {
+                                showCalendarGuide = true
+                            } label: {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.primaryBlue)
+                            }
+                        }
+                        
+                        // Calendar URL Input
+                        TextField("https://calendly.com/your-name/tour", text: $calendarBookingURL)
+                            .textContentType(.URL)
+                            .autocapitalization(.none)
+                            .keyboardType(.URL)
+                            .font(.system(size: 14))
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(UIColor.secondarySystemBackground))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.primaryBlue.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                        
+                        // Help text
+                        HStack(spacing: 6) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("Use Calendly, Google Calendar, or Cal.com (all free)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        // Save button
+                        if !calendarBookingURL.isEmpty && calendarBookingURL.starts(with: "https://") {
+                            Button {
+                                Task {
+                                    await saveCalendarURL()
+                                }
+                            } label: {
+                                HStack {
+                                    if isSavingCalendarURL {
+                                        ProgressView()
+                                            .scaleEffect(0.9)
+                                            .tint(.white)
+                                        Text("Saving...")
+                                    } else {
+                                        Image(systemName: "checkmark.circle.fill")
+                                        Text("Save Calendar URL")
+                                    }
+                                }
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color.primaryBlue, Color.primaryBlueDark],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .shadow(color: Color.primaryBlue.opacity(0.3), radius: 6, x: 0, y: 3)
+                                )
+                            }
+                            .disabled(isSavingCalendarURL)
+                        } else if !calendarBookingURL.isEmpty {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                Text("URL must start with https://")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        
+                        // Help text for errors
+                        if calendarSaveAttempts > 0 && !isSavingCalendarURL && !showCalendarSaveSuccess {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Having trouble saving?")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.orange)
+                                
+                                Text("Make sure:")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 4) {
+                                        Text("•")
+                                        Text("You have internet connection")
+                                    }
+                                    HStack(spacing: 4) {
+                                        Text("•")
+                                        Text("URL starts with https://")
+                                    }
+                                    HStack(spacing: 4) {
+                                        Text("•")
+                                        Text("You're logged in to Trusenda")
+                                    }
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.orange.opacity(0.1))
+                            )
+                        }
+                        
+                        // Success message
+                        if showCalendarSaveSuccess {
+                            HStack(spacing: 8) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Calendar URL saved! Leads can now book tours instantly.")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                            .padding(10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.green.opacity(0.1))
+                            )
+                        }
+                    }
+                    .padding(.vertical, 8)
+                } header: {
+                    Label("INSTANT TOUR BOOKING", systemImage: "calendar.badge.plus")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.primaryBlue)
                 }
                 
                 // Billing
@@ -371,6 +533,10 @@ struct SettingsView: View {
                     settingsViewModel.successMessage = "✅ Pro plan active!"
                 }
             }
+            .task {
+                // Load calendar settings on appear
+                await loadCalendarSettings()
+            }
             .onChange(of: scenePhase) { newPhase in
                 // Auto-refresh when app returns to foreground (from Stripe payment)
                 if newPhase == .active && (isUpgrading || isLoadingPortal) {
@@ -447,6 +613,9 @@ struct SettingsView: View {
             .sheet(isPresented: $showFeedback) {
                 FeedbackView()
                     .environmentObject(authManager)
+            }
+            .sheet(isPresented: $showCalendarGuide) {
+                CalendarGuideView()
             }
         }
     }
@@ -628,6 +797,129 @@ struct SettingsView: View {
             }
         } catch {
             settingsViewModel.error = "Network error: \(error.localizedDescription)"
+        }
+    }
+    
+    // MARK: - Calendar Booking Functions
+    
+    private func loadCalendarSettings() async {
+        isLoadingCalendarSettings = true
+        
+        do {
+            let response: UserSettingsResponse = try await APIClient.shared.get(
+                endpoint: .userSettings,
+                requiresAuth: true
+            )
+            
+            if let urlString = response.calendar_booking_url, !urlString.isEmpty {
+                await MainActor.run {
+                    calendarBookingURL = urlString
+                }
+                print("✅ Loaded calendar URL:", urlString)
+            }
+        } catch {
+            print("⚠️ Failed to load calendar settings:", error)
+            // Don't show error - this is non-critical
+        }
+        
+        await MainActor.run {
+            isLoadingCalendarSettings = false
+        }
+    }
+    
+    private func saveCalendarURL() async {
+        guard !calendarBookingURL.isEmpty else {
+            print("⚠️ Calendar URL is empty, nothing to save")
+            return
+        }
+        
+        guard calendarBookingURL.starts(with: "https://") else {
+            print("❌ Invalid URL format - must start with https://")
+            await MainActor.run {
+                settingsViewModel.error = "Calendar URL must start with https://"
+            }
+            return
+        }
+        
+        isSavingCalendarURL = true
+        showCalendarSaveSuccess = false
+        calendarSaveAttempts += 1
+        
+        print("📝 Saving calendar URL (attempt \(calendarSaveAttempts)):", calendarBookingURL)
+        
+        do {
+            // Use APIClient's PATCH method
+            let updateRequest = UserSettingsUpdateRequest(calendar_booking_url: calendarBookingURL)
+            let updateResponse: UserSettingsUpdateResponse = try await APIClient.shared.patch(
+                endpoint: .userSettings,
+                body: updateRequest,
+                requiresAuth: true
+            )
+            
+            print("✅ Calendar URL saved successfully:", updateResponse.calendar_booking_url ?? "null")
+            
+            // Reset retry counter on success
+            calendarSaveAttempts = 0
+            
+            // Success feedback
+            await MainActor.run {
+                showCalendarSaveSuccess = true
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            }
+            
+            // Hide success message after 3 seconds
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await MainActor.run {
+                showCalendarSaveSuccess = false
+            }
+            
+        } catch let error as NetworkError {
+            print("❌ Failed to save calendar URL:", error)
+            print("   Error description:", error.localizedDescription)
+            
+            await MainActor.run {
+                // User-friendly error messages based on error type
+                switch error {
+                case .unauthorized:
+                    settingsViewModel.error = "Session expired. Please log out and log back in."
+                case .timeout:
+                    settingsViewModel.error = "Request timed out. Please check your internet connection."
+                case .serverError(let code, let message):
+                    if code == 400 {
+                        settingsViewModel.error = message ?? "Invalid URL format. Please check your calendar link."
+                    } else {
+                        settingsViewModel.error = "Server error (\(code)). Please try again."
+                    }
+                case .networkError:
+                    settingsViewModel.error = "Network error. Please check your internet connection."
+                default:
+                    settingsViewModel.error = "Failed to save calendar URL. Please try again. (Attempt \(calendarSaveAttempts))"
+                }
+                
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.error)
+            }
+            
+        } catch {
+            print("❌ Unexpected error saving calendar URL:", error)
+            print("   Error type:", String(describing: type(of: error)))
+            
+            await MainActor.run {
+                // More helpful error messages based on attempt count
+                if calendarSaveAttempts >= 3 {
+                    settingsViewModel.error = "Unable to save after \(calendarSaveAttempts) attempts. Please contact support@trusenda.com"
+                } else {
+                    settingsViewModel.error = "Failed to save calendar URL. Please try again. (Attempt \(calendarSaveAttempts))"
+                }
+                
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.error)
+            }
+        }
+        
+        await MainActor.run {
+            isSavingCalendarURL = false
         }
     }
     
@@ -940,6 +1232,218 @@ struct ContactEmailLink: View {
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
+        }
+    }
+}
+
+// MARK: - Calendar Booking Guide
+struct CalendarGuideView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar.badge.clock")
+                                .font(.system(size: 40))
+                                .foregroundColor(.primaryBlue)
+                            Spacer()
+                        }
+                        
+                        Text("Instant Tour Booking")
+                            .font(.system(size: 28, weight: .bold))
+                        
+                        Text("Let leads book tours directly from property pages")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.bottom, 8)
+                    
+                    // How it works
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("How It Works")
+                            .font(.title3.bold())
+                        
+                        FeatureRow(
+                            icon: "1.circle.fill",
+                            title: "Set up your calendar",
+                            description: "Create a free scheduling link using Calendly, Google Calendar, or Cal.com"
+                        )
+                        
+                        FeatureRow(
+                            icon: "2.circle.fill",
+                            title: "Paste your link here",
+                            description: "Copy your scheduling URL and save it in Settings"
+                        )
+                        
+                        FeatureRow(
+                            icon: "3.circle.fill",
+                            title: "Leads book instantly",
+                            description: "When you share a property, interested leads can book a tour immediately"
+                        )
+                    }
+                    
+                    Divider()
+                    
+                    // Supported platforms
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Supported Platforms (Free)")
+                            .font(.title3.bold())
+                        
+                        PlatformCard(
+                            name: "Calendly",
+                            icon: "calendar.badge.plus",
+                            url: "calendly.com",
+                            exampleURL: "https://calendly.com/your-name/property-tour"
+                        )
+                        
+                        PlatformCard(
+                            name: "Google Calendar",
+                            icon: "calendar",
+                            url: "calendar.google.com",
+                            exampleURL: "https://calendar.google.com/calendar/appointments/..."
+                        )
+                        
+                        PlatformCard(
+                            name: "Cal.com",
+                            icon: "calendar.badge.clock",
+                            url: "cal.com",
+                            exampleURL: "https://cal.com/your-name/tour"
+                        )
+                    }
+                    
+                    Divider()
+                    
+                    // Tips
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Pro Tips")
+                            .font(.title3.bold())
+                        
+                        TipRow(icon: "checkmark.circle.fill", text: "Keep your calendar synced to avoid double-bookings")
+                        TipRow(icon: "checkmark.circle.fill", text: "Set buffer times between appointments")
+                        TipRow(icon: "checkmark.circle.fill", text: "Include property address in booking confirmations")
+                        TipRow(icon: "checkmark.circle.fill", text: "Set reminder emails for both you and the lead")
+                    }
+                    
+                    // Support
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Need Help?")
+                            .font(.headline)
+                        
+                        Link(destination: URL(string: "mailto:support@trusenda.com?subject=Calendar%20Booking%20Setup")!) {
+                            HStack {
+                                Image(systemName: "envelope.fill")
+                                Text("Contact support@trusenda.com")
+                                    .font(.subheadline)
+                                Spacer()
+                                Image(systemName: "arrow.up.forward")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.primaryBlue)
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.primaryBlue.opacity(0.1))
+                            )
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Setup Guide")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.primaryBlue)
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Calendar Guide Helper Views
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(.primaryBlue)
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct PlatformCard: View {
+    let name: String
+    let icon: String
+    let url: String
+    let exampleURL: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(.primaryBlue)
+                Text(name)
+                    .font(.headline)
+                Spacer()
+                Link(destination: URL(string: "https://\(url)")!) {
+                    Text("Visit →")
+                        .font(.caption)
+                        .foregroundColor(.primaryBlue)
+                }
+            }
+            
+            Text(exampleURL)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundColor(.secondary)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color(UIColor.secondarySystemBackground))
+                )
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.primaryBlue.opacity(0.05))
+        )
+    }
+}
+
+struct TipRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.green)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
     }
 }

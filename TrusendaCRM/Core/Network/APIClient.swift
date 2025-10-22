@@ -105,16 +105,20 @@ class APIClient {
         
         request.httpBody = try encoder.encode(body)
         
-        // Debug logging
+        #if DEBUG
+        // Debug logging only in debug builds
         if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
             print("📤 PUT \(url)")
             print("📦 Body: \(bodyString)")
         }
+        #endif
         
         if requiresAuth {
             try await addAuthHeader(to: &request)
+            #if DEBUG
             // Log that auth header was added (not the token itself for security)
             print("🔐 Authorization header added")
+            #endif
         }
         
         return try await performRequest(request)
@@ -145,6 +149,41 @@ class APIClient {
         let _: DeleteResponse = try await performRequest(request)
     }
     
+    // MARK: - PATCH Request
+    func patch<T: Decodable, Body: Encodable>(
+        endpoint: Endpoint,
+        body: Body,
+        requiresAuth: Bool = true
+    ) async throws -> T {
+        guard let url = endpoint.url else {
+            throw NetworkError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        request.httpBody = try encoder.encode(body)
+        
+        #if DEBUG
+        // Debug logging only in debug builds
+        if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
+            print("📤 PATCH \(url)")
+            print("📦 Body: \(bodyString)")
+        }
+        #endif
+        
+        if requiresAuth {
+            try await addAuthHeader(to: &request)
+            #if DEBUG
+            // Log that auth header was added (not the token itself for security)
+            print("🔐 Authorization header added")
+            #endif
+        }
+        
+        return try await performRequest(request)
+    }
+    
     // MARK: - Perform Request
     private func performRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
         do {
@@ -159,16 +198,20 @@ class APIClient {
             case 200...299:
                 // Success
                 do {
-                    // Log the raw response for debugging
+                    #if DEBUG
+                    // Log the raw response for debugging (only in debug builds)
                     if let responseString = String(data: data, encoding: .utf8) {
                         print("📨 Raw response: \(responseString)")
                     }
+                    #endif
                     
                     let decoded = try decoder.decode(T.self, from: data)
                     return decoded
                 } catch {
+                    #if DEBUG
                     print("❌ Decoding error:", error)
                     print("Response data:", String(data: data, encoding: .utf8) ?? "nil")
+                    #endif
                     throw NetworkError.decodingError(error)
                 }
                 
@@ -185,7 +228,9 @@ class APIClient {
                 // Client error
                 let errorMsg = try? decoder.decode(ErrorResponse.self, from: data)
                 let errorMessage = errorMsg?.error ?? String(data: data, encoding: .utf8)
+                #if DEBUG
                 print("⚠️ Client error \(httpResponse.statusCode): \(errorMessage ?? "Unknown")")
+                #endif
                 throw NetworkError.serverError(httpResponse.statusCode, errorMsg?.error)
                 
             case 500...599:

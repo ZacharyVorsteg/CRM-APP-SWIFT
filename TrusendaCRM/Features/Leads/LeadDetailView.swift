@@ -561,6 +561,7 @@ struct EditLeadView: View {
     
     // Size range options (matching AddLeadView)
     let sizeRangeOptions = [
+        ("0-1000", "Less than 1,000 SF"),
         ("1000-2500", "1,000 - 2,500 SF"),
         ("2500-5000", "2,500 - 5,000 SF"),
         ("5000-10000", "5,000 - 10,000 SF"),

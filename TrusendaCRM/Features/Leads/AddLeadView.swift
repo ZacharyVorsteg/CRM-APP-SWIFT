@@ -47,6 +47,7 @@ struct AddLeadView: View {
     ]
     
     let sizeRangeOptions = [
+        ("0-1000", "Less than 1,000 SF"),
         ("1000-2500", "1,000 - 2,500 SF"),
         ("2500-5000", "2,500 - 5,000 SF"),
         ("5000-10000", "5,000 - 10,000 SF"),
@@ -137,10 +138,13 @@ struct AddLeadView: View {
         ]
     }
     
-    // Format date range as MM/YY - MM/YY (matches cloud)
+    // Format date range as MM/DD/YY - MM/DD/YY (with day for accuracy)
+    // CRITICAL FIX: Include day so backend can calculate correctly
+    // OLD: "10/25" meant "October 2025" (ambiguous - could be Oct 1 or Oct 31)
+    // NEW: "10/21/25" means "October 21, 2025" (precise)
     private func formatDateRangeForTimeline(_ startDate: Date, _ endDate: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MM/yy"
+        formatter.dateFormat = "MM/dd/yy"  // Changed from "MM/yy" to include day
         let start = formatter.string(from: startDate)
         let end = formatter.string(from: endDate)
         return "\(start) - \(end)"

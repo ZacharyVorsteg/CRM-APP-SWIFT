@@ -87,23 +87,32 @@ class LeadViewModel: ObservableObject {
     
     // MARK: - Update Lead
     func updateLead(id: String, updates: LeadUpdatePayload, optimistic: Bool = false) async throws {
+        #if DEBUG
         print("📝 updateLead() called for ID: \(id)")
         print("📝 Current leads count: \(leads.count)")
         print("📝 Current statusFilter: \(statusFilter ?? "none")")
+        #endif
         
         // Find the lead index
         guard let index = leads.firstIndex(where: { $0.id == id }) else {
+            #if DEBUG
             print("⚠️ Lead not found in local array!")
+            #endif
             throw NetworkError.serverError(404, "Lead not found")
         }
         
         // Save original state for rollback
         let originalLead = leads[index]
+        
+        #if DEBUG
         print("💾 Original lead BEFORE update: id=\(originalLead.id), name='\(originalLead.name)', status=\(originalLead.status)")
+        #endif
         
         // Optimistic update: Update UI immediately if requested
         if optimistic {
+            #if DEBUG
             print("⚡️ Applying optimistic update...")
+            #endif
             var updatedLead = originalLead
             
             // Apply the updates to the local copy
@@ -124,7 +133,10 @@ class LeadViewModel: ObservableObject {
             // Update UI immediately
             leads[index] = updatedLead
             applyFilters()
+            
+            #if DEBUG
             print("⚡️ Optimistic update applied to UI")
+            #endif
         }
         
         do {
@@ -134,18 +146,26 @@ class LeadViewModel: ObservableObject {
                 body: updates
             )
             
+            #if DEBUG
             print("📥 Response received: \(response.customer.name) - \(response.customer.status)")
             print("📥 Response customer ID: \(response.customer.id)")
             print("📥 Response full customer: name='\(response.customer.name)', email=\(response.customer.email ?? "nil"), status=\(response.customer.status)")
+            #endif
             
             // Update with server response (overrides optimistic update)
             leads[index] = response.customer
+            
+            #if DEBUG
             print("📝 Local lead updated from server: \(leads[index].name) - \(leads[index].status)")
             print("📝 Local lead full: id=\(leads[index].id), name='\(leads[index].name)', status=\(leads[index].status)")
+            #endif
             
             applyFilters()
+            
+            #if DEBUG
             print("📝 Filtered leads after: \(filteredLeads.count)")
             print("📝 Displayed leads after: \(displayedLeads.count)")
+            #endif
             
             successMessage = "✅ Lead updated"
             clearMessageAfterDelay()
@@ -153,10 +173,14 @@ class LeadViewModel: ObservableObject {
         } catch {
             // Rollback optimistic update on error
             if optimistic {
+                #if DEBUG
                 print("❌ Update failed, rolling back optimistic changes...")
+                #endif
                 leads[index] = originalLead
                 applyFilters()
+                #if DEBUG
                 print("🔄 Rollback complete")
+                #endif
             }
             
             // Re-throw the error
