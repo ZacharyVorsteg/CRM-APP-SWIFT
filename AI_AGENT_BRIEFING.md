@@ -13,6 +13,8 @@ Trusenda is a Commercial & Industrial Real Estate CRM with two synchronized fron
 ## Current Status & Progress
 1. **Authentication & Branding** ✅ COMPLETE
    - Auto-login after signup implemented
+   - **Persistent sessions** - users stay logged in (Oct 22, 2025)
+   - **Automatic token refresh** - seamless session restoration
    - Welcome tour for new users added
    - Logo fully integrated across all touchpoints:
      * App Icon (1024x1024 in AppIcon.appiconset)
@@ -99,6 +101,19 @@ Trusenda is a Commercial & Industrial Real Estate CRM with two synchronized fron
    - Detailed logging for debugging
    - Works reliably across all messaging apps (Messages, WhatsApp, Email, etc.)
    - See LINK_SHARING_FIX.md and QUICK_FIX_SUMMARY.md for details
+
+9. **Authentication Persistence** ✅ FIXED (Oct 22, 2025) - CRITICAL
+   - Users now stay logged in indefinitely (until manual logout)
+   - Automatic token refresh on app reopen (no more unexpected logouts)
+   - Optimistic authentication state (no flash of login screen)
+   - Comprehensive token restoration flow:
+     * Check for any tokens (access OR refresh)
+     * Try access token if valid
+     * Auto-refresh if access token expired but refresh token valid
+     * Only logout if both tokens invalid
+   - Perfect cloud parity - matches web app session behavior
+   - Enhanced debug logging for troubleshooting
+   - See AUTHENTICATION_PERSISTENCE_FIX.md for full details
 
 ## Technical Details
 1. **SwiftUI Architecture**

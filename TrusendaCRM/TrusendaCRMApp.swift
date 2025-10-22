@@ -14,7 +14,8 @@ struct TrusendaCRMApp: App {
             ContentView()
                 .environmentObject(authManager)
                 .task {
-                    // Clear all auth state on app launch
+                    // Restore session on app launch (with automatic token refresh)
+                    // Users stay logged in until they manually log out
                     await authManager.checkAuthStatus()
                 }
         }

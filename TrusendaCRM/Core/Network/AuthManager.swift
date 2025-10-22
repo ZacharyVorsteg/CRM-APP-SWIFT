@@ -13,9 +13,16 @@ class AuthManager: ObservableObject {
     private let client = APIClient.shared
     
     private init() {
-        // Don't auto-authenticate on init - let checkAuthStatus handle it
-        // This prevents auto-login before user sees login screen
-        isAuthenticated = false
+        // Check if we have stored tokens - if so, optimistically show authenticated state
+        // This prevents flickering to login screen when user has valid session
+        let hasTokens = keychain.get(.accessToken) != nil || keychain.get(.refreshToken) != nil
+        isAuthenticated = hasTokens
+        
+        #if DEBUG
+        if hasTokens {
+            print("🔐 Found stored tokens - initializing as authenticated")
+        }
+        #endif
     }
     
     // MARK: - Biometric Login
@@ -244,27 +251,80 @@ class AuthManager: ObservableObject {
     
     // MARK: - Check Auth on App Launch
     func checkAuthStatus() async {
-        // Check if we have a valid token from previous session
-        guard let _ = keychain.get(.accessToken),
-              !keychain.isTokenExpired() else {
-            // No valid token - user needs to log in
+        // CRITICAL: Keep users logged in unless they explicitly log out
+        // This matches cloud app behavior for seamless experience
+        
+        #if DEBUG
+        print("🔍 Checking authentication status...")
+        #endif
+        
+        // Check if we have any tokens at all
+        guard keychain.get(.accessToken) != nil || keychain.get(.refreshToken) != nil else {
+            // No tokens at all - user needs to log in
+            #if DEBUG
+            print("❌ No tokens found - requiring login")
+            #endif
             isAuthenticated = false
             currentUser = nil
             return
         }
         
-        // We have a valid token - restore session
-        do {
-            try await fetchMe()
-            isAuthenticated = true
-            print("✅ Session restored - user still logged in")
-        } catch {
-            // Token invalid or network error - force login
-            print("⚠️ Session restore failed - requiring login")
-            keychain.clearAll()
-            isAuthenticated = false
-            currentUser = nil
+        // Check if access token is valid
+        if let _ = keychain.get(.accessToken), !keychain.isTokenExpired() {
+            // Access token is valid - restore session
+            #if DEBUG
+            print("✅ Valid access token found")
+            #endif
+            
+            do {
+                try await fetchMe()
+                isAuthenticated = true
+                #if DEBUG
+                print("✅ Session restored successfully")
+                #endif
+                return
+            } catch {
+                // Failed to fetch user - token might be invalid
+                #if DEBUG
+                print("⚠️ Failed to fetch user with access token: \(error)")
+                #endif
+            }
+        } else {
+            #if DEBUG
+            print("⚠️ Access token expired or invalid")
+            #endif
         }
+        
+        // Access token expired or invalid - try to refresh automatically
+        if keychain.get(.refreshToken) != nil {
+            #if DEBUG
+            print("🔄 Attempting automatic token refresh...")
+            #endif
+            
+            do {
+                try await refreshToken()
+                // Refresh successful - fetch user info
+                try await fetchMe()
+                isAuthenticated = true
+                #if DEBUG
+                print("✅ Token refreshed and session restored")
+                #endif
+                return
+            } catch {
+                // Refresh failed - tokens are invalid
+                #if DEBUG
+                print("❌ Token refresh failed: \(error)")
+                #endif
+            }
+        }
+        
+        // Both access and refresh tokens failed - require login
+        #if DEBUG
+        print("⚠️ All token restoration attempts failed - requiring login")
+        #endif
+        keychain.clearAll()
+        isAuthenticated = false
+        currentUser = nil
     }
 }
 
