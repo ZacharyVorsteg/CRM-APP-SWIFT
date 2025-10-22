@@ -617,6 +617,12 @@ struct SettingsView: View {
             .sheet(isPresented: $showCalendarGuide) {
                 CalendarGuideView()
             }
+            .onAppear {
+                // Load calendar settings when view appears
+                Task {
+                    await loadCalendarSettings()
+                }
+            }
         }
     }
     
