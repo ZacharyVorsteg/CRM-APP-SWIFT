@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E6F8E8F52C6E9B8D00D4C8B1"
+               BlueprintIdentifier = "TARGET001"
                BuildableName = "TrusendaCRM.app"
                BlueprintName = "TrusendaCRM"
                ReferencedContainer = "container:TrusendaCRM.xcodeproj">
