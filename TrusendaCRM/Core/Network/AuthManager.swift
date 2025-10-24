@@ -26,13 +26,11 @@ class AuthManager: ObservableObject {
     
     /// Get current authentication provider name
     var authProvider: String {
-        if isUsingAuth0 {
-            #if canImport(Auth0)
+        #if canImport(Auth0)
+        if Auth0Config.isConfigured {
             return Auth0Manager.shared.user?.providerName ?? "Auth0"
-            #else
-            return "Unknown"
-            #endif
         }
+        #endif
         return "Netlify Identity"
     }
     
