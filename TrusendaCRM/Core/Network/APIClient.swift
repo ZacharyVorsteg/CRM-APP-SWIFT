@@ -259,12 +259,12 @@ class APIClient {
         // Check if using Auth0 first (if Auth0 package is available)
         #if canImport(Auth0)
         if Auth0Config.isConfigured, 
-           Auth0Manager.shared.isAuthenticated,
-           let auth0Token = Auth0Manager.shared.accessToken {
+           await Auth0Manager.shared.isAuthenticated,
+           let auth0Token = await Auth0Manager.shared.accessToken {
             // Use Auth0 token
             print("🔐 Using Auth0 access token")
             print("🔐 Token length:", auth0Token.count, "characters")
-            print("🔐 Provider:", Auth0Manager.shared.user?.providerName ?? "Unknown")
+            print("🔐 Provider:", await Auth0Manager.shared.user?.providerName ?? "Unknown")
             request.setValue("Bearer \(auth0Token)", forHTTPHeaderField: "Authorization")
             print("🔐 =========================================")
             return
