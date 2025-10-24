@@ -1,0 +1,28 @@
+PODS:
+  - Auth0 (2.15.1):
+    - JWTDecode (= 3.3.0)
+    - SimpleKeychain (= 1.3.0)
+  - GooglePlaces (9.4.1)
+  - JWTDecode (3.3.0)
+  - SimpleKeychain (1.3.0)
+
+DEPENDENCIES:
+  - Auth0 (~> 2.0)
+  - GooglePlaces (~> 9.0)
+
+SPEC REPOS:
+  trunk:
+    - Auth0
+    - GooglePlaces
+    - JWTDecode
+    - SimpleKeychain
+
+SPEC CHECKSUMS:
+  Auth0: b4649e1b386d9d8d82c6fe7616279a0ae1edbbe0
+  GooglePlaces: 8afca6c4e946472e91298589d1640d614b51749a
+  JWTDecode: 1ca6f765844457d0dd8690436860fecee788f631
+  SimpleKeychain: 9c0f3ca8458fed74e01db864d181c5cbe278603e
+
+PODFILE CHECKSUM: 897768f1d1b10df510437fec40b5a3142d84ede2
+
+COCOAPODS: 1.16.2
