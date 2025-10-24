@@ -252,11 +252,38 @@ class APIClient {
         }
     }
     
-    // MARK: - Auth Header
+    // MARK: - Auth Header (Supports Auth0 & Netlify Identity)
     private func addAuthHeader(to request: inout URLRequest) async throws {
-        // Get valid token (will refresh if needed)
-        let token = try await AuthManager.shared.getValidToken()
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        print("🔐 ========== ADDING AUTH HEADER ==========")
+        
+        // Check if using Auth0 first (if Auth0 package is available)
+        #if canImport(Auth0)
+        if Auth0Config.isConfigured, 
+           Auth0Manager.shared.isAuthenticated,
+           let auth0Token = Auth0Manager.shared.accessToken {
+            // Use Auth0 token
+            print("🔐 Using Auth0 access token")
+            print("🔐 Token length:", auth0Token.count, "characters")
+            print("🔐 Provider:", Auth0Manager.shared.user?.providerName ?? "Unknown")
+            request.setValue("Bearer \(auth0Token)", forHTTPHeaderField: "Authorization")
+            print("🔐 =========================================")
+            return
+        }
+        #endif
+        
+        // Fall back to Netlify Identity
+        print("🔐 Using Netlify Identity token")
+        do {
+            let token = try await AuthManager.shared.getValidToken()
+            print("🔐 Netlify token obtained")
+            print("🔐 Token length:", token.count, "characters")
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("🔐 =========================================")
+        } catch {
+            print("❌ Failed to get Netlify Identity token:", error.localizedDescription)
+            print("❌ =========================================")
+            throw error
+        }
     }
 }
 

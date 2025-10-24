@@ -1,5 +1,6 @@
 import SwiftUI
 import LocalAuthentication
+// import Auth0  // Temporarily disabled - not yet integrated
 
 struct LoginView: View {
     @StateObject private var viewModel = AuthViewModel()
@@ -223,6 +224,92 @@ struct LoginView: View {
                         }
                         .padding(.bottom, 8)
                         .opacity(animateLogo ? 1 : 0)
+                        
+                        // Auth0 Social Sign-In Buttons
+                        if Auth0Config.isConfigured {
+                            VStack(spacing: 12) {
+                                // Google Sign-In Button
+                                Button {
+                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                    generator.impactOccurred()
+                                    Auth0Manager.shared.loginWithGoogle()
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "g.circle.fill")
+                                            .font(.system(size: 20))
+                                        Text("Continue with Google")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color(red: 0.26, green: 0.52, blue: 0.96),
+                                                        Color(red: 0.20, green: 0.42, blue: 0.86)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .shadow(color: Color(red: 0.26, green: 0.52, blue: 0.96).opacity(0.4), radius: 12, x: 0, y: 6)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                
+                                // Apple Sign-In Button
+                                Button {
+                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                    generator.impactOccurred()
+                                    Auth0Manager.shared.loginWithApple()
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "apple.logo")
+                                            .font(.system(size: 20, weight: .medium))
+                                        Text("Continue with Apple")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color.black,
+                                                        Color(red: 0.1, green: 0.1, blue: 0.1)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: 6)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                
+                                // Divider with "or" text
+                                HStack(spacing: 12) {
+                                    Rectangle()
+                                        .fill(Color.white.opacity(0.3))
+                                        .frame(height: 1)
+                                    Text("or")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.7))
+                                    Rectangle()
+                                        .fill(Color.white.opacity(0.3))
+                                        .frame(height: 1)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
+                            .opacity(animateLogo ? 1 : 0)
+                        }
                         
                         // Premium login form card
                         VStack(spacing: 20) {

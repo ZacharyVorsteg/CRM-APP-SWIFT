@@ -2,6 +2,7 @@ import Foundation
 import Combine
 
 /// Manages authentication state and JWT token lifecycle
+/// Supports both Auth0 (social login) and Netlify Identity (email/password)
 @MainActor
 class AuthManager: ObservableObject {
     static let shared = AuthManager()
@@ -12,15 +13,51 @@ class AuthManager: ObservableObject {
     private let keychain = KeychainManager.shared
     private let client = APIClient.shared
     
+    // MARK: - Authentication System Detection
+    
+    /// Check if using Auth0 for authentication
+    var isUsingAuth0: Bool {
+        #if canImport(Auth0)
+        return Auth0Config.isConfigured && Auth0Manager.shared.isAuthenticated
+        #else
+        return false
+        #endif
+    }
+    
+    /// Get current authentication provider name
+    var authProvider: String {
+        if isUsingAuth0 {
+            #if canImport(Auth0)
+            return Auth0Manager.shared.user?.providerName ?? "Auth0"
+            #else
+            return "Unknown"
+            #endif
+        }
+        return "Netlify Identity"
+    }
+    
     private init() {
         // Check if we have stored tokens - if so, optimistically show authenticated state
         // This prevents flickering to login screen when user has valid session
+        
+        // Check Auth0 first (if configured)
+        #if canImport(Auth0)
+        if Auth0Config.isConfigured && Auth0Manager.shared.isAuthenticated {
+            isAuthenticated = true
+            #if DEBUG
+            print("🔐 Found Auth0 session - initializing as authenticated")
+            #endif
+            return
+        }
+        #endif
+        
+        // Fall back to Netlify Identity
         let hasTokens = keychain.get(.accessToken) != nil || keychain.get(.refreshToken) != nil
         isAuthenticated = hasTokens
         
         #if DEBUG
         if hasTokens {
-            print("🔐 Found stored tokens - initializing as authenticated")
+            print("🔐 Found stored Netlify Identity tokens - initializing as authenticated")
         }
         #endif
     }
@@ -146,6 +183,14 @@ class AuthManager: ObservableObject {
     
     // MARK: - Logout
     func logout() {
+        // Logout from Auth0 if using it
+        #if canImport(Auth0)
+        if Auth0Config.isConfigured && Auth0Manager.shared.isAuthenticated {
+            Auth0Manager.shared.logout()
+        }
+        #endif
+        
+        // Clear Netlify Identity tokens
         keychain.clearAll()
         currentUser = nil
         isAuthenticated = false

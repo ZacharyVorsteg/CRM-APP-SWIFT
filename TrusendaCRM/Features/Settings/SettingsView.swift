@@ -148,7 +148,6 @@ struct SettingsView: View {
     @State private var calendarBookingURL = ""
     @State private var isLoadingCalendarSettings = true
     @State private var isSavingCalendarURL = false
-    @State private var showCalendarSaveSuccess = false
     @State private var showCalendarGuide = false
     @State private var calendarSaveAttempts = 0
     
@@ -161,7 +160,6 @@ struct SettingsView: View {
                         HStack {
                             Text("Plan")
                             Spacer()
-                            Text(user.plan.capitalized)
                             Text(user.isPro ? "PRO" : "FREE")
                                 .font(.caption.bold())
                                 .padding(.horizontal, 8)
@@ -238,13 +236,15 @@ struct SettingsView: View {
                     }
                 }
                 
-                // Calendar Booking Integration - NEW!
+                // Calendar Booking Integration - Clean & Professional
                 Section {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Header with info button
+                        HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "calendar.badge.clock")
                                 .foregroundColor(.primaryBlue)
                                 .font(.system(size: 22))
+                            
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Instant Tour Booking")
                                     .font(.headline)
@@ -252,52 +252,58 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            
                             Spacer()
                             
-                            // Info button
+                            // Info button - ONLY shows guide modal, nothing else
                             Button {
                                 showCalendarGuide = true
                             } label: {
-                                Image(systemName: "info.circle.fill")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(.primaryBlue)
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.secondary)
+                                    .padding(8) // Larger tap target
+                            }
+                            .buttonStyle(.plain) // Prevents accidental triggering
+                        }
+                        
+                        // Calendar URL Input - isolated, no accidental triggers
+                        VStack(alignment: .leading, spacing: 8) {
+                            TextField("https://calendly.com/your-name/tour", text: $calendarBookingURL)
+                                .textContentType(.URL)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                                .keyboardType(.URL)
+                                .font(.system(size: 14))
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color(UIColor.secondarySystemBackground))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.primaryBlue.opacity(0.3), lineWidth: 1)
+                                        )
+                                )
+                            
+                            // Help text - not tappable
+                            HStack(spacing: 6) {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("Calendly, Google Calendar, Outlook, or Cal.com")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
                         
-                        // Calendar URL Input
-                        TextField("https://calendly.com/your-name/tour", text: $calendarBookingURL)
-                            .textContentType(.URL)
-                            .autocapitalization(.none)
-                            .keyboardType(.URL)
-                            .font(.system(size: 14))
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(UIColor.secondarySystemBackground))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.primaryBlue.opacity(0.3), lineWidth: 1)
-                                    )
-                            )
-                        
-                        // Help text
-                        HStack(spacing: 6) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("Use Calendly, Google Calendar, or Cal.com (all free)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        // Save button
-                        if !calendarBookingURL.isEmpty && calendarBookingURL.starts(with: "https://") {
+                        // Save button - ONLY shows when URL is valid, isolated from other elements
+                        if !calendarBookingURL.isEmpty && isValidCalendarURL(calendarBookingURL) {
                             Button {
                                 Task {
                                     await saveCalendarURL()
                                 }
                             } label: {
-                                HStack {
+                                HStack(spacing: 8) {
                                     if isSavingCalendarURL {
                                         ProgressView()
                                             .scaleEffect(0.9)
@@ -324,67 +330,31 @@ struct SettingsView: View {
                                         .shadow(color: Color.primaryBlue.opacity(0.3), radius: 6, x: 0, y: 3)
                                 )
                             }
+                            .buttonStyle(.plain) // Explicit button style, no expansion
                             .disabled(isSavingCalendarURL)
+                            .padding(.top, 4)
+                            
+                            // Success indicator
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                Text("Active - Leads can book tours")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 4)
                         } else if !calendarBookingURL.isEmpty {
+                            // Invalid URL warning
                             HStack(spacing: 6) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .font(.caption)
                                     .foregroundColor(.orange)
-                                Text("URL must start with https://")
+                                Text("Please enter a valid calendar URL")
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
-                        }
-                        
-                        // Help text for errors
-                        if calendarSaveAttempts > 0 && !isSavingCalendarURL && !showCalendarSaveSuccess {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Having trouble saving?")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.orange)
-                                
-                                Text("Make sure:")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 4) {
-                                        Text("•")
-                                        Text("You have internet connection")
-                                    }
-                                    HStack(spacing: 4) {
-                                        Text("•")
-                                        Text("URL starts with https://")
-                                    }
-                                    HStack(spacing: 4) {
-                                        Text("•")
-                                        Text("You're logged in to Trusenda")
-                                    }
-                                }
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            }
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.orange.opacity(0.1))
-                            )
-                        }
-                        
-                        // Success message
-                        if showCalendarSaveSuccess {
-                            HStack(spacing: 8) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                                Text("Calendar URL saved! Leads can now book tours instantly.")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
-                            .padding(10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.green.opacity(0.1))
-                            )
+                            .padding(.top, 4)
                         }
                     }
                     .padding(.vertical, 8)
@@ -811,6 +781,15 @@ struct SettingsView: View {
     private func loadCalendarSettings() async {
         isLoadingCalendarSettings = true
         
+        // First, try loading from UserDefaults cache for instant display
+        if let cachedURL = UserDefaults.standard.string(forKey: "cached_calendar_booking_url"), !cachedURL.isEmpty {
+            await MainActor.run {
+                calendarBookingURL = cachedURL
+            }
+            print("📱 Loaded cached calendar URL:", cachedURL)
+        }
+        
+        // Then fetch from backend to ensure it's up-to-date
         do {
             let response: UserSettingsResponse = try await APIClient.shared.get(
                 endpoint: .userSettings,
@@ -821,16 +800,47 @@ struct SettingsView: View {
                 await MainActor.run {
                     calendarBookingURL = urlString
                 }
-                print("✅ Loaded calendar URL:", urlString)
+                // Update cache
+                UserDefaults.standard.set(urlString, forKey: "cached_calendar_booking_url")
+                print("✅ Loaded calendar URL from backend:", urlString)
+            } else {
+                print("ℹ️ No calendar URL set on backend")
             }
         } catch {
-            print("⚠️ Failed to load calendar settings:", error)
-            // Don't show error - this is non-critical
+            print("⚠️ Failed to load calendar settings from backend:", error)
+            // Fallback to cached URL if available
+            if let cachedURL = UserDefaults.standard.string(forKey: "cached_calendar_booking_url"), !cachedURL.isEmpty {
+                await MainActor.run {
+                    calendarBookingURL = cachedURL
+                }
+                print("📱 Using cached calendar URL as fallback")
+            }
         }
         
         await MainActor.run {
             isLoadingCalendarSettings = false
         }
+    }
+    
+    // MARK: - Calendar URL Validation
+    
+    private func isValidCalendarURL(_ url: String) -> Bool {
+        // Check if URL starts with https://
+        guard url.starts(with: "https://") else {
+            return false
+        }
+        
+        // List of supported calendar services
+        let supportedDomains = [
+            "calendly.com",
+            "calendar.google.com",
+            "cal.com",
+            "outlook.office365.com",
+            "outlook.live.com"
+        ]
+        
+        // Check if URL contains any of the supported domains
+        return supportedDomains.contains { url.contains($0) }
     }
     
     private func saveCalendarURL() async {
@@ -839,16 +849,15 @@ struct SettingsView: View {
             return
         }
         
-        guard calendarBookingURL.starts(with: "https://") else {
-            print("❌ Invalid URL format - must start with https://")
+        guard isValidCalendarURL(calendarBookingURL) else {
+            print("❌ Invalid calendar URL - must be from Calendly, Google Calendar, Outlook, or Cal.com")
             await MainActor.run {
-                settingsViewModel.error = "Calendar URL must start with https://"
+                settingsViewModel.error = "Please enter a valid calendar URL from Calendly, Google Calendar, Outlook, or Cal.com"
             }
             return
         }
         
         isSavingCalendarURL = true
-        showCalendarSaveSuccess = false
         calendarSaveAttempts += 1
         
         print("📝 Saving calendar URL (attempt \(calendarSaveAttempts)):", calendarBookingURL)
@@ -864,20 +873,18 @@ struct SettingsView: View {
             
             print("✅ Calendar URL saved successfully:", updateResponse.calendar_booking_url ?? "null")
             
+            // Store locally for immediate persistence
+            UserDefaults.standard.set(calendarBookingURL, forKey: "cached_calendar_booking_url")
+            
             // Reset retry counter on success
             calendarSaveAttempts = 0
             
-            // Success feedback
+            // Success feedback - only use global toast
             await MainActor.run {
-                showCalendarSaveSuccess = true
+                settingsViewModel.successMessage = "✅ Calendar URL saved! Leads can now book tours."
+                settingsViewModel.clearMessageAfterDelay()
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
-            }
-            
-            // Hide success message after 3 seconds
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            await MainActor.run {
-                showCalendarSaveSuccess = false
             }
             
         } catch let error as NetworkError {
@@ -1311,6 +1318,13 @@ struct CalendarGuideView: View {
                             icon: "calendar",
                             url: "calendar.google.com",
                             exampleURL: "https://calendar.google.com/calendar/appointments/..."
+                        )
+                        
+                        PlatformCard(
+                            name: "Microsoft Outlook",
+                            icon: "envelope.badge.fill",
+                            url: "outlook.office365.com",
+                            exampleURL: "https://outlook.office365.com/owa/calendar/..."
                         )
                         
                         PlatformCard(

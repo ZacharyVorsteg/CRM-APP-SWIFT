@@ -46,6 +46,14 @@ struct CalendarSetupGuideView: View {
                         )
                         
                         CalendarOptionCard(
+                            name: "Microsoft Outlook",
+                            icon: "📨",
+                            description: "Free with Microsoft account. Office 365 integration.",
+                            url: "https://outlook.office365.com/owa/calendar",
+                            pros: ["Works with work email", "Office 365 sync", "Teams integration"]
+                        )
+                        
+                        CalendarOptionCard(
                             name: "Cal.com",
                             icon: "🌐",
                             description: "Open source. Unlimited event types.",
@@ -64,7 +72,7 @@ struct CalendarSetupGuideView: View {
                             InstructionStep(
                                 number: 1,
                                 title: "Pick a calendar tool",
-                                description: "Choose Calendly, Google Calendar, or Cal.com (all free)"
+                                description: "Choose Calendly, Google Calendar, Outlook, or Cal.com (all free)"
                             )
                             
                             InstructionStep(

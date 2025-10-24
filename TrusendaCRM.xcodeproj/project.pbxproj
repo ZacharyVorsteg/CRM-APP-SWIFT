@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		746DB6BF8806F1288694ED49 /* Pods_TrusendaCRM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */; };
 		APP001 /* TrusendaCRMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE001 /* TrusendaCRMApp.swift */; };
 		APP002 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE002 /* APIClient.swift */; };
 		APP003 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE003 /* AuthManager.swift */; };
@@ -29,13 +30,6 @@
 		APP020 /* FollowUpListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE020 /* FollowUpListView.swift */; };
 		APP021 /* RecentActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE021 /* RecentActivityView.swift */; };
 		APP022 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE022 /* SettingsViewModel.swift */; };
-		PROPERTY001 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYMODEL /* Property.swift */; };
-		PROPERTY002 /* PropertyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYVM /* PropertyViewModel.swift */; };
-		PROPERTY003 /* PropertiesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYLIST /* PropertiesListView.swift */; };
-		PROPERTY004 /* AddPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYADD /* AddPropertyView.swift */; };
-		PROPERTY005 /* PropertyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYDETAIL /* PropertyDetailView.swift */; };
-		PROPERTY006 /* EditPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYEDIT /* EditPropertyView.swift */; };
-		PROPERTY007 /* PropertyShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYSHARE /* PropertyShareSheet.swift */; };
 		ASSETS001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ASSETSREF /* Assets.xcassets */; };
 		COLORTHEME001 /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = COLORTHEMEFILE /* Color+Theme.swift */; };
 		CONSTANTS001 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONSTANTSFILE /* AppConstants.swift */; };
@@ -46,6 +40,13 @@
 		LEGALDOC001 /* LegalDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LEGALDOCFILE /* LegalDocumentView.swift */; };
 		NOTIFICATIONS001 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = NOTIFICATIONSFILE /* NotificationsView.swift */; };
 		PLACEHOLDER001 /* View+Placeholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLACEHOLDERFILE /* View+Placeholder.swift */; };
+		PROPERTY001 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYMODEL /* Property.swift */; };
+		PROPERTY002 /* PropertyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYVM /* PropertyViewModel.swift */; };
+		PROPERTY003 /* PropertiesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYLIST /* PropertiesListView.swift */; };
+		PROPERTY004 /* AddPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYADD /* AddPropertyView.swift */; };
+		PROPERTY005 /* PropertyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYDETAIL /* PropertyDetailView.swift */; };
+		PROPERTY006 /* EditPropertyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYEDIT /* EditPropertyView.swift */; };
+		PROPERTY007 /* PropertyShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PROPERTYSHARE /* PropertyShareSheet.swift */; };
 		SETTINGS001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETTINGSFILE /* SettingsView.swift */; };
 		SPLASH001 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SPLASHFILE /* SplashScreenView.swift */; };
 		TIMEZONE001 /* TimezonePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TIMEZONEFILE /* TimezonePickerView.swift */; };
@@ -53,6 +54,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrusendaCRM.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.release.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.release.xcconfig"; sourceTree = "<group>"; };
+		6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.debug.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.debug.xcconfig"; sourceTree = "<group>"; };
 		ASSETSREF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		COLORTHEMEFILE /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
 		CONSTANTSFILE /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
@@ -80,13 +84,6 @@
 		FILE020 /* FollowUpListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpListView.swift; sourceTree = "<group>"; };
 		FILE021 /* RecentActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivityView.swift; sourceTree = "<group>"; };
 		FILE022 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
-		PROPERTYMODEL /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
-		PROPERTYVM /* PropertyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyViewModel.swift; sourceTree = "<group>"; };
-		PROPERTYLIST /* PropertiesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesListView.swift; sourceTree = "<group>"; };
-		PROPERTYADD /* AddPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPropertyView.swift; sourceTree = "<group>"; };
-		PROPERTYDETAIL /* PropertyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailView.swift; sourceTree = "<group>"; };
-		PROPERTYEDIT /* EditPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPropertyView.swift; sourceTree = "<group>"; };
-		PROPERTYSHARE /* PropertyShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyShareSheet.swift; sourceTree = "<group>"; };
 		FULLLEGALFILE /* FullLegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullLegalDocumentView.swift; sourceTree = "<group>"; };
 		INFOPLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		LEGALDOCFILE /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
@@ -94,6 +91,13 @@
 		NOTIFICATIONSFILE /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		PLACEHOLDERFILE /* View+Placeholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Placeholder.swift"; sourceTree = "<group>"; };
 		PRODUCT001 /* TrusendaCRM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrusendaCRM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		PROPERTYADD /* AddPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPropertyView.swift; sourceTree = "<group>"; };
+		PROPERTYDETAIL /* PropertyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyDetailView.swift; sourceTree = "<group>"; };
+		PROPERTYEDIT /* EditPropertyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPropertyView.swift; sourceTree = "<group>"; };
+		PROPERTYLIST /* PropertiesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesListView.swift; sourceTree = "<group>"; };
+		PROPERTYMODEL /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
+		PROPERTYSHARE /* PropertyShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyShareSheet.swift; sourceTree = "<group>"; };
+		PROPERTYVM /* PropertyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyViewModel.swift; sourceTree = "<group>"; };
 		SETTINGSFILE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		SPLASHFILE /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
 		TIMEZONEFILE /* TimezonePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimezonePickerView.swift; sourceTree = "<group>"; };
@@ -105,12 +109,39 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				746DB6BF8806F1288694ED49 /* Pods_TrusendaCRM.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		47A63BADC62B16DD590CB98A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A9ACB0AB669EAF61A88D7EA2 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */,
+				4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		ACTIVITYGROUP /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				FILE021 /* RecentActivityView.swift */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
 		APPGROUP /* TrusendaCRM */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,27 +198,6 @@
 			path = Features;
 			sourceTree = "<group>";
 		};
-		ACTIVITYGROUP /* Activity */ = {
-			isa = PBXGroup;
-			children = (
-				FILE021 /* RecentActivityView.swift */,
-			);
-			path = Activity;
-			sourceTree = "<group>";
-		};
-		PROPERTIESGROUP /* Properties */ = {
-			isa = PBXGroup;
-			children = (
-				PROPERTYVM /* PropertyViewModel.swift */,
-				PROPERTYLIST /* PropertiesListView.swift */,
-				PROPERTYADD /* AddPropertyView.swift */,
-				PROPERTYEDIT /* EditPropertyView.swift */,
-				PROPERTYDETAIL /* PropertyDetailView.swift */,
-				PROPERTYSHARE /* PropertyShareSheet.swift */,
-			);
-			path = Properties;
-			sourceTree = "<group>";
-		};
 		FOLLOWUPSGROUP /* FollowUps */ = {
 			isa = PBXGroup;
 			children = (
@@ -213,6 +223,8 @@
 			children = (
 				APPGROUP /* TrusendaCRM */,
 				PRODUCTSGROUP /* Products */,
+				A9ACB0AB669EAF61A88D7EA2 /* Pods */,
+				47A63BADC62B16DD590CB98A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -254,6 +266,19 @@
 				PRODUCT001 /* TrusendaCRM.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		PROPERTIESGROUP /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+				PROPERTYVM /* PropertyViewModel.swift */,
+				PROPERTYLIST /* PropertiesListView.swift */,
+				PROPERTYADD /* AddPropertyView.swift */,
+				PROPERTYEDIT /* EditPropertyView.swift */,
+				PROPERTYDETAIL /* PropertyDetailView.swift */,
+				PROPERTYSHARE /* PropertyShareSheet.swift */,
+			);
+			path = Properties;
 			sourceTree = "<group>";
 		};
 		SETTINGSGROUP /* Settings */ = {
@@ -313,9 +338,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CONFIGLIST002 /* Build configuration list for PBXNativeTarget "TrusendaCRM" */;
 			buildPhases = (
+				CEC66316C7A01022B7D5CC54 /* [CP] Check Pods Manifest.lock */,
 				SOURCES001 /* Sources */,
 				FRAMEWORKS001 /* Frameworks */,
 				RESOURCES001 /* Resources */,
+				E49F7B834236CC7762DE4B02 /* [CP] Embed Pods Frameworks */,
+				09CB881DC62AE2919D4D9354 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -369,6 +397,65 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		09CB881DC62AE2919D4D9354 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		CEC66316C7A01022B7D5CC54 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrusendaCRM-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E49F7B834236CC7762DE4B02 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		SOURCES001 /* Sources */ = {
@@ -544,11 +631,12 @@
 		};
 		TARGETDEBUG001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8746VPZ8R9;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = TrusendaCRM/Info.plist;
@@ -572,11 +660,12 @@
 		};
 		TARGETRELEASE001 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8746VPZ8R9;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = TrusendaCRM/Info.plist;

@@ -7,8 +7,7 @@ target 'TrusendaCRM' do
   # Use frameworks
   use_frameworks!
 
-  # Auth0 SDK for iOS
-  # Social login (Google, Apple) and secure authentication
+  # Auth0 SDK for iOS - REQUIRED for login (matches web app)
   pod 'Auth0', '~> 2.0'
 
   # Google Places SDK for iOS

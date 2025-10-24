@@ -108,8 +108,8 @@ struct AddPropertyView: View {
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(
-                                            title.isEmpty ? Color.errorRed.opacity(0.3) : Color.primaryBlue.opacity(0.2),
-                                            lineWidth: 1
+                                            title.isEmpty ? Color.errorRed.opacity(0.3) : Color.successGreen.opacity(0.4),
+                                            lineWidth: 1.5
                                         )
                                 )
                                 .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
@@ -136,8 +136,8 @@ struct AddPropertyView: View {
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(
-                                            address.isEmpty ? Color.errorRed.opacity(0.3) : Color.primaryBlue.opacity(0.2),
-                                            lineWidth: 1
+                                            address.isEmpty ? Color.errorRed.opacity(0.3) : Color.successGreen.opacity(0.4),
+                                            lineWidth: 1.5
                                         )
                                 )
                                 .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
@@ -179,10 +179,10 @@ struct AddPropertyView: View {
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(
-                                            (city.isEmpty || state.isEmpty || zipCode.isEmpty) 
+                                            (city.isEmpty || state.isEmpty || !isValidZipCode(zipCode)) 
                                                 ? Color.errorRed.opacity(0.3) 
-                                                : Color.primaryBlue.opacity(0.2),
-                                            lineWidth: 1
+                                                : Color.successGreen.opacity(0.4),
+                                            lineWidth: 1.5
                                         )
                                 )
                                 .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
@@ -209,16 +209,21 @@ struct AddPropertyView: View {
                 Section {
                     // Property Type - Required
                     HStack {
+                        if !propertyType.isEmpty {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.successGreen)
+                                .font(.system(size: 16))
+                        }
+                        
                         Picker("Property Type", selection: $propertyType) {
                             Text("Select property type").tag("").foregroundColor(.secondary)
                             ForEach(propertyTypes, id: \.self) { type in
                                 Text(type).tag(type)
                             }
                         }
-                        .tint(propertyType.isEmpty ? .errorRed : .primaryBlue)
                         
                         Text("*")
-                            .foregroundColor(.errorRed)
+                            .foregroundColor(propertyType.isEmpty ? .errorRed : .successGreen)
                             .font(.title.bold())
                     }
                     
@@ -232,13 +237,18 @@ struct AddPropertyView: View {
                     
                     // Size Range - Required for matching
                     HStack {
+                        if !sizeRange.isEmpty {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.successGreen)
+                                .font(.system(size: 16))
+                        }
+                        
                         Picker("Size Range (SF)", selection: $sizeRange) {
                             Text("Select size...").tag("")
                             ForEach(sizeRangeOptions, id: \.0) { value, label in
                                 Text(label).tag(value)
                             }
                         }
-                        .tint(sizeRange.isEmpty ? .errorRed : .primaryBlue)
                         .onChange(of: sizeRange) { newValue in
                             if newValue.contains("-") {
                                 let parts = newValue.split(separator: "-")
@@ -251,22 +261,27 @@ struct AddPropertyView: View {
                         }
                         
                         Text("*")
-                            .foregroundColor(.errorRed)
+                            .foregroundColor(sizeRange.isEmpty ? .errorRed : .successGreen)
                             .font(.title.bold())
                     }
                     
                     // Price/Budget - Required for matching
                     HStack {
+                        if !budget.isEmpty {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.successGreen)
+                                .font(.system(size: 16))
+                        }
+                        
                         Picker("Price Range", selection: $budget) {
                             Text("Select price range...").tag("")
                             ForEach(budgetOptions, id: \.self) { option in
                                 Text(option).tag(option)
                             }
                         }
-                        .tint(budget.isEmpty ? .errorRed : .primaryBlue)
                         
                         Text("*")
-                            .foregroundColor(.errorRed)
+                            .foregroundColor(budget.isEmpty ? .errorRed : .successGreen)
                             .font(.title.bold())
                     }
                     
@@ -281,16 +296,21 @@ struct AddPropertyView: View {
                     
                     // Best Suited Industry - Required for matching
                     HStack {
+                        if !industry.isEmpty {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.successGreen)
+                                .font(.system(size: 16))
+                        }
+                        
                         Picker("Best Suited For", selection: $industry) {
                             Text("Select industry...").tag("")
                             ForEach(industryOptions, id: \.self) { option in
                                 Text(option).tag(option)
                             }
                         }
-                        .tint(industry.isEmpty ? .errorRed : .primaryBlue)
                         
                         Text("*")
-                            .foregroundColor(.errorRed)
+                            .foregroundColor(industry.isEmpty ? .errorRed : .successGreen)
                             .font(.title.bold())
                     }
                 } header: {
@@ -306,25 +326,31 @@ struct AddPropertyView: View {
                 }
                 
                 Section {
-                    // Photos picker
-                    PhotosPicker(selection: $selectedPhotos, maxSelectionCount: 6, matching: .images) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle.angled")
-                                .foregroundColor(.primaryBlue)
-                            Text("Add Photos")
-                                .foregroundColor(.primaryBlue)
-                            Spacer()
-                            if !loadedImages.isEmpty {
-                                Text("\(loadedImages.count) selected")
-                                    .font(.caption)
-                                    .foregroundColor(.successGreen)
+                    // Photos picker - Required
+                    HStack {
+                        PhotosPicker(selection: $selectedPhotos, maxSelectionCount: 6, matching: .images) {
+                            HStack {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .foregroundColor(loadedImages.isEmpty ? .errorRed : .successGreen)
+                                Text("Add Photos")
+                                    .foregroundColor(loadedImages.isEmpty ? .errorRed : .successGreen)
+                                Spacer()
+                                if !loadedImages.isEmpty {
+                                    Text("\(loadedImages.count) selected")
+                                        .font(.caption)
+                                        .foregroundColor(.successGreen)
+                                }
                             }
                         }
-                    }
-                    .onChange(of: selectedPhotos) { newItems in
-                        Task {
-                            await loadPhotos(from: newItems)
+                        .onChange(of: selectedPhotos) { newItems in
+                            Task {
+                                await loadPhotos(from: newItems)
+                            }
                         }
+                        
+                        Text("*")
+                            .foregroundColor(.errorRed)
+                            .font(.title.bold())
                     }
                     
                     // Photo preview
@@ -387,11 +413,15 @@ struct AddPropertyView: View {
                             }
                         )
                 } header: {
-                    Label("DESCRIPTION & MEDIA", systemImage: "text.alignleft")
+                    Label("DESCRIPTION & MEDIA (PHOTO REQUIRED)", systemImage: "text.alignleft")
                         .font(.system(size: 13, weight: .heavy))
                         .foregroundColor(.primaryBlue)
                         .textCase(.uppercase)
                         .tracking(1.0)
+                } footer: {
+                    Text("At least one property photo is required")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 
                 Section {
@@ -504,7 +534,8 @@ struct AddPropertyView: View {
         !propertyType.isEmpty &&
         !sizeRange.isEmpty &&
         !budget.isEmpty &&
-        !industry.isEmpty
+        !industry.isEmpty &&
+        !loadedImages.isEmpty
     }
     
     private var hasInteractedWithForm: Bool {
@@ -525,6 +556,7 @@ struct AddPropertyView: View {
         if sizeRange.isEmpty { errors.append("Size range") }
         if budget.isEmpty { errors.append("Price range") }
         if industry.isEmpty { errors.append("Best suited industry") }
+        if loadedImages.isEmpty { errors.append("At least one property photo") }
         
         return errors
     }
