@@ -12,7 +12,6 @@ import SwiftUI
 
 /// Auth0 Authentication Manager
 /// Handles social login (Google & Apple) and email/password authentication
-@MainActor
 class Auth0Manager: ObservableObject {
     static let shared = Auth0Manager()
     
@@ -44,6 +43,7 @@ class Auth0Manager: ObservableObject {
     // MARK: - Session Restoration
     
     /// Restore session from keychain on app launch
+    @MainActor
     func restoreSession() async {
         guard Auth0Config.isConfigured else {
             print("⚠️ Auth0 not configured - skipping session restore")
@@ -78,6 +78,7 @@ class Auth0Manager: ObservableObject {
     // MARK: - Google Login
     
     /// Login with Google
+    @MainActor
     func loginWithGoogle() {
         guard Auth0Config.isConfigured else {
             self.error = "Auth0 not configured. Please update Auth0Config.swift"
@@ -123,6 +124,7 @@ class Auth0Manager: ObservableObject {
     // MARK: - Apple Login
     
     /// Login with Apple
+    @MainActor
     func loginWithApple() {
         guard Auth0Config.isConfigured else {
             self.error = "Auth0 not configured. Please update Auth0Config.swift"
