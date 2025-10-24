@@ -40,12 +40,15 @@ class AuthManager: ObservableObject {
         
         // Check Auth0 first (if configured)
         #if canImport(Auth0)
-        if Auth0Config.isConfigured && Auth0Manager.shared.isAuthenticated {
-            isAuthenticated = true
-            #if DEBUG
-            print("🔐 Found Auth0 session - initializing as authenticated")
-            #endif
-            return
+        if Auth0Config.isConfigured {
+            // Check auth status - safe to access since class is not @MainActor
+            if Auth0Manager.shared.isAuthenticated {
+                isAuthenticated = true
+                #if DEBUG
+                print("🔐 Found Auth0 session - initializing as authenticated")
+                #endif
+                return
+            }
         }
         #endif
         
