@@ -184,7 +184,9 @@ class AuthManager: ObservableObject {
         // Logout from Auth0 if using it
         #if canImport(Auth0)
         if Auth0Config.isConfigured && Auth0Manager.shared.isAuthenticated {
-            Auth0Manager.shared.logout()
+            Task { @MainActor in
+                Auth0Manager.shared.logout()
+            }
         }
         #endif
         
