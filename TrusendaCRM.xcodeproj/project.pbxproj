@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		746DB6BF8806F1288694ED49 /* Pods_TrusendaCRM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */; };
+		451D19BD9574C6F204485AB0 /* Auth0Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = F451494075FC08E99CFEB34C /* Auth0Config.swift */; };
+		71CAC14AD5CC090DF3E06997 /* Auth0Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC987318E0E949314FA175E /* Auth0Manager.swift */; };
+		7238AE5AB9E4C40346BED0FA /* Pods_TrusendaCRM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327F475A134C4F5A9BF4492A /* Pods_TrusendaCRM.framework */; };
 		APP001 /* TrusendaCRMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE001 /* TrusendaCRMApp.swift */; };
 		APP002 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE002 /* APIClient.swift */; };
 		APP003 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILE003 /* AuthManager.swift */; };
@@ -54,13 +56,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrusendaCRM.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.release.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.release.xcconfig"; sourceTree = "<group>"; };
-		6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.debug.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.debug.xcconfig"; sourceTree = "<group>"; };
+		327F475A134C4F5A9BF4492A /* Pods_TrusendaCRM.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrusendaCRM.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		53DD3B53E8CB6C8EE7FF024C /* Pods-TrusendaCRM.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.debug.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.debug.xcconfig"; sourceTree = "<group>"; };
 		ASSETSREF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BC9F57321DE7952A8B3F3BE6 /* Pods-TrusendaCRM.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrusendaCRM.release.xcconfig"; path = "Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM.release.xcconfig"; sourceTree = "<group>"; };
+		CBC987318E0E949314FA175E /* Auth0Manager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Auth0Manager.swift; sourceTree = "<group>"; };
 		COLORTHEMEFILE /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
 		CONSTANTSFILE /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		CONTACTSFILE /* ContactsPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsPickerView.swift; sourceTree = "<group>"; };
+		F451494075FC08E99CFEB34C /* Auth0Config.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Auth0Config.swift; sourceTree = "<group>"; };
 		FEEDBACKFILE /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
 		FILE001 /* TrusendaCRMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrusendaCRMApp.swift; sourceTree = "<group>"; };
 		FILE002 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -109,29 +113,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				746DB6BF8806F1288694ED49 /* Pods_TrusendaCRM.framework in Frameworks */,
+				7238AE5AB9E4C40346BED0FA /* Pods_TrusendaCRM.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		47A63BADC62B16DD590CB98A /* Frameworks */ = {
+		479C7D7A25BD34A3A5B52284 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2786FA37CF87B45E46F5C50F /* Pods_TrusendaCRM.framework */,
+				327F475A134C4F5A9BF4492A /* Pods_TrusendaCRM.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		A9ACB0AB669EAF61A88D7EA2 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */,
-				4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		ACTIVITYGROUP /* Activity */ = {
@@ -162,6 +156,16 @@
 				FILE015 /* LoginView.swift */,
 			);
 			path = Authentication;
+			sourceTree = "<group>";
+		};
+		BCD5E453EDECA61E75700DDB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				53DD3B53E8CB6C8EE7FF024C /* Pods-TrusendaCRM.debug.xcconfig */,
+				BC9F57321DE7952A8B3F3BE6 /* Pods-TrusendaCRM.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		COREGROUP /* Core */ = {
@@ -223,8 +227,8 @@
 			children = (
 				APPGROUP /* TrusendaCRM */,
 				PRODUCTSGROUP /* Products */,
-				A9ACB0AB669EAF61A88D7EA2 /* Pods */,
-				47A63BADC62B16DD590CB98A /* Frameworks */,
+				BCD5E453EDECA61E75700DDB /* Pods */,
+				479C7D7A25BD34A3A5B52284 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -247,6 +251,8 @@
 				FILE003 /* AuthManager.swift */,
 				FILE004 /* Endpoints.swift */,
 				FILE005 /* NetworkError.swift */,
+				F451494075FC08E99CFEB34C /* Auth0Config.swift */,
+				CBC987318E0E949314FA175E /* Auth0Manager.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -338,12 +344,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CONFIGLIST002 /* Build configuration list for PBXNativeTarget "TrusendaCRM" */;
 			buildPhases = (
-				CEC66316C7A01022B7D5CC54 /* [CP] Check Pods Manifest.lock */,
+				4385D06C0630CC5A4A0A4E76 /* [CP] Check Pods Manifest.lock */,
 				SOURCES001 /* Sources */,
 				FRAMEWORKS001 /* Frameworks */,
 				RESOURCES001 /* Resources */,
-				E49F7B834236CC7762DE4B02 /* [CP] Embed Pods Frameworks */,
-				09CB881DC62AE2919D4D9354 /* [CP] Copy Pods Resources */,
+				0A0854DDA2533309589619B3 /* [CP] Embed Pods Frameworks */,
+				D79B827714F71FA38EB708E7 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -399,24 +405,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		09CB881DC62AE2919D4D9354 /* [CP] Copy Pods Resources */ = {
+		0A0854DDA2533309589619B3 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CEC66316C7A01022B7D5CC54 /* [CP] Check Pods Manifest.lock */ = {
+		4385D06C0630CC5A4A0A4E76 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -438,21 +444,21 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E49F7B834236CC7762DE4B02 /* [CP] Embed Pods Frameworks */ = {
+		D79B827714F71FA38EB708E7 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrusendaCRM/Pods-TrusendaCRM-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -504,6 +510,8 @@
 				FULLLEGAL001 /* FullLegalDocumentView.swift in Sources */,
 				TIMEZONE001 /* TimezonePickerView.swift in Sources */,
 				NOTIFICATIONS001 /* NotificationsView.swift in Sources */,
+				451D19BD9574C6F204485AB0 /* Auth0Config.swift in Sources */,
+				71CAC14AD5CC090DF3E06997 /* Auth0Manager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,7 +639,7 @@
 		};
 		TARGETDEBUG001 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6AF5AB26B1B795F9CBE34132 /* Pods-TrusendaCRM.debug.xcconfig */;
+			baseConfigurationReference = 53DD3B53E8CB6C8EE7FF024C /* Pods-TrusendaCRM.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -660,7 +668,7 @@
 		};
 		TARGETRELEASE001 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4ABCA33312D7348DAF5B3D73 /* Pods-TrusendaCRM.release.xcconfig */;
+			baseConfigurationReference = BC9F57321DE7952A8B3F3BE6 /* Pods-TrusendaCRM.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

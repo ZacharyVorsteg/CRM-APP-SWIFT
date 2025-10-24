@@ -1,6 +1,6 @@
 import SwiftUI
 import LocalAuthentication
-// import Auth0  // Temporarily disabled - not yet integrated
+import Auth0
 
 struct LoginView: View {
     @StateObject private var viewModel = AuthViewModel()

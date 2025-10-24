@@ -276,6 +276,7 @@ class Auth0Manager: ObservableObject {
     // MARK: - Logout
     
     /// Logout and clear session
+    @MainActor
     func logout() {
         guard Auth0Config.isConfigured else {
             print("⚠️ Auth0 not configured - clearing local session only")
