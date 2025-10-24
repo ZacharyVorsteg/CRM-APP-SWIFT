@@ -53,7 +53,7 @@ class Auth0Manager: ObservableObject {
         print("🔄 ========== RESTORING AUTH0 SESSION ==========")
         
         // Check for stored tokens
-        if let storedToken = KeychainManager.shared.retrieveToken() {
+        if let storedToken = KeychainManager.shared.get(.accessToken) {
             print("✅ Found stored access token")
             self.accessToken = storedToken
             
@@ -102,7 +102,7 @@ class Auth0Manager: ObservableObject {
                     case .success(let credentials):
                         print("✅ ========== GOOGLE LOGIN SUCCESS ==========")
                         print("✅ Access Token received:", credentials.accessToken.prefix(20), "...")
-                        print("✅ ID Token received:", credentials.idToken?.prefix(20) ?? "none", "...")
+                        print("✅ ID Token received:", credentials.idToken.prefix(20), "...")
                         print("✅ Has Refresh Token:", credentials.refreshToken != nil)
                         print("✅ ============================================")
                         
@@ -147,7 +147,7 @@ class Auth0Manager: ObservableObject {
                     case .success(let credentials):
                         print("✅ ========== APPLE LOGIN SUCCESS ==========")
                         print("✅ Access Token received:", credentials.accessToken.prefix(20), "...")
-                        print("✅ ID Token received:", credentials.idToken?.prefix(20) ?? "none", "...")
+                        print("✅ ID Token received:", credentials.idToken.prefix(20), "...")
                         print("✅ Has Refresh Token:", credentials.refreshToken != nil)
                         print("✅ ===========================================")
                         
@@ -211,9 +211,9 @@ class Auth0Manager: ObservableObject {
         self.refreshToken = credentials.refreshToken
         
         // Save to keychain
-        KeychainManager.shared.saveToken(credentials.accessToken)
+        KeychainManager.shared.save(credentials.accessToken, for: .accessToken)
         if let refreshToken = credentials.refreshToken {
-            KeychainManager.shared.save(refreshToken, forKey: "auth0_refresh_token")
+            KeychainManager.shared.save(refreshToken, for: .refreshToken)
             print("✅ Refresh token saved to keychain")
         }
         
@@ -261,7 +261,7 @@ class Auth0Manager: ObservableObject {
                 sub: profile.sub,
                 email: profile.email,
                 name: profile.name,
-                picture: profile.picture,
+                picture: profile.picture?.absoluteString,
                 emailVerified: profile.emailVerified ?? false
             )
             
@@ -311,8 +311,8 @@ class Auth0Manager: ObservableObject {
         self.error = nil
         
         // Clear from keychain
-        KeychainManager.shared.deleteToken()
-        KeychainManager.shared.delete(forKey: "auth0_refresh_token")
+        KeychainManager.shared.delete(.accessToken)
+        KeychainManager.shared.delete(.refreshToken)
         
         print("✅ Local session cleared")
     }
@@ -321,7 +321,7 @@ class Auth0Manager: ObservableObject {
     
     /// Refresh access token if needed
     func refreshTokenIfNeeded() async {
-        guard let refreshToken = KeychainManager.shared.retrieve(forKey: "auth0_refresh_token") else {
+        guard let refreshToken = KeychainManager.shared.get(.refreshToken) else {
             print("⚠️ No refresh token available")
             return
         }
@@ -344,12 +344,12 @@ class Auth0Manager: ObservableObject {
             print("✅ New token length:", credentials.accessToken.count, "characters")
             
             self.accessToken = credentials.accessToken
-            KeychainManager.shared.saveToken(credentials.accessToken)
+            KeychainManager.shared.save(credentials.accessToken, for: .accessToken)
             
             // Optionally update refresh token if provided
             if let newRefreshToken = credentials.refreshToken {
                 self.refreshToken = newRefreshToken
-                KeychainManager.shared.save(newRefreshToken, forKey: "auth0_refresh_token")
+                KeychainManager.shared.save(newRefreshToken, for: .refreshToken)
                 print("✅ Refresh token updated")
             }
             
